@@ -1,0 +1,50 @@
+<div class="admin-page">
+  <div class="container">
+    <div class="admin-header">
+      <h1 class="admin-title"><i class="bi bi-shield-lock me-2"></i>Role Management</h1>
+      <p class="admin-subtitle">Manage roles and configure which applications each role can access.</p>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill"></i><span><%= success %></span></div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error %></span></div>
+    <% } %>
+
+    <% if (roles && roles.length > 0) { %>
+      <div class="role-grid">
+        <% roles.forEach(role => { %>
+          <div class="role-card">
+            <div class="role-card-header">
+              <div class="role-card-icon"><i class="bi bi-shield-check"></i></div>
+              <div>
+                <h3 class="role-card-title"><%= role.Name %></h3>
+                <p class="role-card-desc"><%= role.Description || 'No description' %></p>
+              </div>
+            </div>
+            <div class="role-card-stats">
+              <div class="role-stat">
+                <span class="role-stat-value"><%= role.UserCount %></span>
+                <span class="role-stat-label">Users</span>
+              </div>
+              <div class="role-stat">
+                <span class="role-stat-value"><%= role.AppCount %></span>
+                <span class="role-stat-label">Apps</span>
+              </div>
+            </div>
+            <a href="/admin/roles/<%= role.Id %>/edit" class="btn btn-secondary-portal w-100 justify-content-center mt-3">
+              <i class="bi bi-pencil me-1"></i> Configure
+            </a>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="bi bi-shield-lock"></i></div>
+        <h2 class="empty-state-title">No Roles</h2>
+        <p class="empty-state-text">Roles are created via the database schema.</p>
+      </div>
+    <% } %>
+  </div>
+</div>

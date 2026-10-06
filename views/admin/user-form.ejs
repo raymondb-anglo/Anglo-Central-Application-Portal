@@ -1,0 +1,123 @@
+<div class="admin-page">
+  <div class="container" style="max-width: 800px;">
+    <div class="admin-header">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <a href="/admin/users" class="btn-back"><i class="bi bi-arrow-left"></i></a>
+        <h1 class="admin-title mb-0">
+          <i class="bi bi-<%= isEdit ? 'pencil-square' : 'person-plus' %> me-2"></i>
+          <%= isEdit ? 'Edit User' : 'Add User' %>
+        </h1>
+      </div>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error %></span></div>
+    <% } %>
+
+    <form method="POST" action="<%= isEdit ? '/admin/users/' + editUser.Id : '/admin/users' %>" class="admin-form">
+      <!-- User details -->
+      <div class="form-section">
+        <h3 class="form-section-title">User Details</h3>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="email" class="form-label">Email <% if (!isEdit) { %><span class="text-danger">*</span><% } %></label>
+            <input type="email" class="form-control" id="email" name="email"
+                   value="<%= editUser ? editUser.Email : '' %>"
+                   placeholder="user@anglosingapore.ac.th"
+                   <%= isEdit ? 'readonly' : 'required' %>>
+          </div>
+          <div class="col-md-6">
+            <label for="displayName" class="form-label">Display Name</label>
+            <input type="text" class="form-control" id="displayName" name="displayName"
+                   value="<%= editUser ? editUser.DisplayName : '' %>">
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <label for="firstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="firstName" name="firstName"
+                   value="<%= editUser ? editUser.FirstName : '' %>">
+          </div>
+          <div class="col-md-4">
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="lastName" name="lastName"
+                   value="<%= editUser ? editUser.LastName : '' %>">
+          </div>
+          <div class="col-md-4">
+            <div class="form-check-container">
+              <label class="form-label d-block">Status</label>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="isActive" name="isActive"
+                       <%= (!editUser || editUser.IsActive) ? 'checked' : '' %>>
+                <label class="form-check-label" for="isActive">Active</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password (for username/password login) -->
+      <div class="form-section">
+        <h3 class="form-section-title">Password <span class="text-muted fw-normal" style="font-size: 0.75rem;">(for password login method)</span></h3>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="password" class="form-label"><%= isEdit ? 'New Password' : 'Password' %></label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="<%= isEdit ? 'Leave blank to keep current' : 'Set a password' %>">
+            <div class="form-text">Min 8 characters. Leave blank if the user will only use Google or OTP.</div>
+          </div>
+          <div class="col-md-6">
+            <label for="confirmPassword" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Confirm password">
+          </div>
+        </div>
+      </div>
+
+      <!-- Roles -->
+      <div class="form-section">
+        <h3 class="form-section-title">Roles</h3>
+        <div class="checkbox-grid">
+          <% roles.forEach(role => { %>
+            <label class="checkbox-card">
+              <input type="checkbox" name="roles" value="<%= role.Id %>"
+                     <%= userRoleIds.includes(role.Id) ? 'checked' : '' %>>
+              <div class="checkbox-card-body">
+                <span class="checkbox-card-title"><%= role.Name %></span>
+                <% if (role.Description) { %>
+                  <span class="checkbox-card-desc"><%= role.Description %></span>
+                <% } %>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Application Access -->
+      <div class="form-section">
+        <h3 class="form-section-title">Application Access <span class="text-muted fw-normal" style="font-size: 0.75rem;">(per-user override)</span></h3>
+        <p class="form-text mb-3">Select specific applications this user can access. If none are selected, role-based access applies.</p>
+        <div class="checkbox-grid">
+          <% applications.forEach(app => { %>
+            <label class="checkbox-card">
+              <input type="checkbox" name="applications" value="<%= app.Id %>"
+                     <%= userAppIds.includes(app.Id) ? 'checked' : '' %>>
+              <div class="checkbox-card-body">
+                <span class="checkbox-card-title"><%= app.Application %></span>
+                <% if (app.Campus) { %>
+                  <span class="checkbox-card-desc"><i class="bi bi-building me-1"></i><%= app.Campus %></span>
+                <% } %>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/admin/users" class="btn btn-secondary-portal">Cancel</a>
+        <button type="submit" class="btn btn-primary-portal">
+          <i class="bi bi-<%= isEdit ? 'check-lg' : 'plus-lg' %> me-1"></i>
+          <%= isEdit ? 'Update User' : 'Add User' %>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

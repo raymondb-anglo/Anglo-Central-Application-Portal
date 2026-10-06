@@ -1,0 +1,181 @@
+<div class="admin-page">
+  <div class="container" style="max-width: 800px;">
+    <div class="admin-header">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <a href="/admin/applications" class="btn-back">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <h1 class="admin-title mb-0">
+          <i class="bi bi-<%= isEdit ? 'pencil-square' : 'plus-circle' %> me-2"></i>
+          <%= isEdit ? 'Edit Application' : 'Add Application' %>
+        </h1>
+      </div>
+      <p class="admin-subtitle">
+        <%= isEdit ? 'Update application details and configuration.' : 'Register a new application in the portal.' %>
+      </p>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span><%= error %></span>
+      </div>
+    <% } %>
+
+    <form method="POST"
+          action="<%= isEdit ? '/admin/applications/' + application.Id : '/admin/applications' %>"
+          class="admin-form">
+
+      <!-- Core information -->
+      <div class="form-section">
+        <h3 class="form-section-title">Core Information</h3>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="applicationCode" class="form-label">Application Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="applicationCode" name="applicationCode"
+                   value="<%= application ? (application.applicationCode || application.ApplicationCode || '') : '' %>"
+                   placeholder="e.g. CCA, PTM, PGJ" required>
+            <div class="form-text">Short unique identifier for the application</div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="application" class="form-label">Application Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="application" name="application"
+                   value="<%= application ? (application.application || application.Application || '') : '' %>"
+                   placeholder="e.g. CCA, PTM, PGJ" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label for="campus" class="form-label">Campus</label>
+            <input type="text" class="form-control" id="campus" name="campus"
+                   value="<%= application ? (application.campus || application.Campus || '') : '' %>"
+                   placeholder="e.g. Main Campus, Campus 31, Korat"
+                   list="campus-list">
+            <datalist id="campus-list">
+              <option value="Main Campus">
+              <option value="Campus 31">
+              <option value="Korat">
+            </datalist>
+            <div class="form-text">Leave empty for applications without campus-specific versions</div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="link" class="form-label">Application URL <span class="text-danger">*</span></label>
+            <input type="url" class="form-control" id="link" name="link"
+                   value="<%= application ? (application.link || application.Link || '') : '' %>"
+                   placeholder="https://app.anglosingapore.ac.th/" required>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="2"
+                    placeholder="Brief description of the application"><%= application ? (application.description || application.Description || '') : '' %></textarea>
+        </div>
+      </div>
+
+      <!-- Technical metadata -->
+      <div class="form-section">
+        <h3 class="form-section-title">Technical Metadata</h3>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="databaseType" class="form-label">Database Type</label>
+            <select class="form-control" id="databaseType" name="databaseType">
+              <option value="">— Select —</option>
+              <option value="MSSQL" <%= application && (application.databaseType || application.DatabaseType) === 'MSSQL' ? 'selected' : '' %>>MSSQL</option>
+              <option value="MySQL" <%= application && (application.databaseType || application.DatabaseType) === 'MySQL' ? 'selected' : '' %>>MySQL</option>
+              <option value="PostgreSQL" <%= application && (application.databaseType || application.DatabaseType) === 'PostgreSQL' ? 'selected' : '' %>>PostgreSQL</option>
+              <option value="Other" <%= application && (application.databaseType || application.DatabaseType) === 'Other' ? 'selected' : '' %>>Other</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="technology" class="form-label">Technology</label>
+            <input type="text" class="form-control" id="technology" name="technology"
+                   value="<%= application ? (application.technology || application.Technology || '') : '' %>"
+                   placeholder="e.g. Node.js + Express, .NET Core"
+                   list="tech-list">
+            <datalist id="tech-list">
+              <option value="Node.js + Express">
+              <option value=".NET Core">
+              <option value="ASP.NET Core">
+              <option value="Python">
+            </datalist>
+          </div>
+        </div>
+      </div>
+
+      <!-- Display configuration -->
+      <div class="form-section">
+        <h3 class="form-section-title">Display Configuration</h3>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="name" class="form-label">User Type</label>
+            <input type="text" class="form-control" id="name" name="name"
+                   value="<%= application ? (application.name || application.Name || '') : '' %>"
+                   placeholder="e.g. Student, Admin, Staff"
+                   list="type-list">
+            <datalist id="type-list">
+              <option value="Student">
+              <option value="Admin">
+              <option value="Staff">
+              <option value="Teacher">
+            </datalist>
+          </div>
+
+          <div class="col-md-4">
+            <label for="icon" class="form-label">Icon</label>
+            <input type="text" class="form-control" id="icon" name="icon"
+                   value="<%= application ? (application.icon || application.Icon || '') : '' %>"
+                   placeholder="e.g. calendar-event, people">
+            <div class="form-text">
+              <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">Bootstrap Icons</a> name
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="displayOrder" class="form-label">Display Order</label>
+            <input type="number" class="form-control" id="displayOrder" name="displayOrder"
+                   value="<%= application ? (application.displayOrder || application.DisplayOrder || 0) : 0 %>"
+                   min="0">
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-control" id="status" name="status">
+              <option value="Active" <%= !application || (application.status || application.Status) === 'Active' ? 'selected' : '' %>>Active</option>
+              <option value="Inactive" <%= application && (application.status || application.Status) === 'Inactive' ? 'selected' : '' %>>Inactive</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check-container">
+              <label class="form-label d-block">SSO</label>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="requiresSSO" name="requiresSSO"
+                       <%= application && (application.requiresSSO || application.RequiresSSO) ? 'checked' : '' %>>
+                <label class="form-check-label" for="requiresSSO">Requires SSO</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="form-actions">
+        <a href="/admin/applications" class="btn btn-secondary-portal">Cancel</a>
+        <button type="submit" class="btn btn-primary-portal">
+          <i class="bi bi-<%= isEdit ? 'check-lg' : 'plus-lg' %> me-1"></i>
+          <%= isEdit ? 'Update Application' : 'Add Application' %>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,135 @@
+<div class="login-page">
+  <!-- Animated background -->
+  <div class="login-bg">
+    <div class="login-bg-shape shape-1"></div>
+    <div class="login-bg-shape shape-2"></div>
+    <div class="login-bg-shape shape-3"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Brand header -->
+      <div class="login-header">
+        <div class="login-icon">
+          <i class="bi bi-grid-3x3-gap-fill"></i>
+        </div>
+        <h1 class="login-title">Anglo Application Portal</h1>
+        <p class="login-subtitle">Anglo Singapore International School</p>
+      </div>
+
+      <!-- Error / Success messages -->
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
+          <i class="bi bi-check-circle-fill"></i>
+          <span><%= success %></span>
+        </div>
+      <% } %>
+
+      <!-- Auth method tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab <%= (typeof tab === 'undefined' || tab === 'google') ? 'active' : '' %>" data-target="google-panel">
+          <i class="bi bi-google me-1"></i> Google
+        </button>
+        <button class="auth-tab <%= tab === 'password' ? 'active' : '' %>" data-target="password-panel">
+          <i class="bi bi-key me-1"></i> Password
+        </button>
+        <button class="auth-tab <%= tab === 'otp' ? 'active' : '' %>" data-target="otp-panel">
+          <i class="bi bi-envelope me-1"></i> OTP
+        </button>
+      </div>
+
+      <!-- Panel 1: Google OAuth -->
+      <div class="auth-panel <%= (typeof tab === 'undefined' || tab === 'google') ? 'active' : '' %>" id="google-panel">
+        <p class="login-instruction">Sign in with your school Google account</p>
+        <% if (typeof googleConfigured !== 'undefined' && googleConfigured) { %>
+          <a href="/auth/google" class="btn btn-google" id="google-signin-btn">
+            <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Sign in with Google</span>
+          </a>
+        <% } else { %>
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <i class="bi bi-info-circle-fill mt-1"></i>
+            <div>
+              <strong>Google OAuth not configured</strong>
+              <p class="mb-0 small mt-1">Set <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in <code>.env</code></p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Panel 2: Password Login -->
+      <div class="auth-panel <%= tab === 'password' ? 'active' : '' %>" id="password-panel">
+        <p class="login-instruction">Sign in with your email and password</p>
+        <form method="POST" action="/auth/password-login" class="auth-form">
+          <div class="auth-input-group">
+            <label for="pw-email" class="form-label">Email</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" class="form-control" id="pw-email" name="email" placeholder="your.name@anglosingapore.ac.th" required>
+            </div>
+          </div>
+          <div class="auth-input-group">
+            <label for="pw-password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control" id="pw-password" name="password" placeholder="Enter your password" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary-portal w-100">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+          </button>
+        </form>
+      </div>
+
+      <!-- Panel 3: OTP -->
+      <div class="auth-panel <%= tab === 'otp' ? 'active' : '' %>" id="otp-panel">
+        <p class="login-instruction">We'll send a one-time code to your email</p>
+        <form method="POST" action="/auth/otp-request" class="auth-form">
+          <div class="auth-input-group">
+            <label for="otp-email" class="form-label">Email</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" class="form-control" id="otp-email" name="email" placeholder="your.name@anglosingapore.ac.th" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary-portal w-100">
+            <i class="bi bi-send me-1"></i> Send Code
+          </button>
+        </form>
+      </div>
+
+      <% if (typeof isDev !== 'undefined' && isDev) { %>
+        <!-- Dev login (development only) -->
+        <div class="dev-login-section">
+          <div class="dev-login-divider"><span>Development Login</span></div>
+          <form method="POST" action="/auth/dev-login" class="dev-login-form">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" class="form-control" name="email" value="admin@anglosingapore.ac.th" required>
+            </div>
+            <button type="submit" class="btn btn-dev-login">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Dev Sign In
+            </button>
+          </form>
+          <p class="dev-login-note"><i class="bi bi-shield-exclamation me-1"></i>Dev login is disabled in production</p>
+        </div>
+      <% } %>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p class="login-footer-text"><i class="bi bi-shield-lock-fill"></i> Secured by Anglo Singapore IT</p>
+      </div>
+    </div>
+  </div>
+</div>

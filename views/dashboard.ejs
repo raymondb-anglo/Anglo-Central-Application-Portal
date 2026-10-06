@@ -1,0 +1,109 @@
+<div class="dashboard-page">
+  <!-- Welcome header -->
+  <div class="dashboard-header">
+    <div class="container">
+      <div class="dashboard-welcome">
+        <div class="welcome-text">
+          <h1 class="welcome-title">
+            Welcome back<% if (user && user.FirstName) { %>, <span class="welcome-name"><%= user.FirstName %></span><% } %>
+          </h1>
+          <p class="welcome-subtitle">Select an application to get started</p>
+        </div>
+        <div class="welcome-meta">
+          <span class="badge badge-portal">
+            <i class="bi bi-clock me-1"></i>
+            <span id="current-time"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Applications grid -->
+  <div class="container">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2 mt-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span><%= error %></span>
+      </div>
+    <% } %>
+
+    <% if (applications && applications.length > 0) { %>
+      <!-- Campus filter tabs -->
+      <div class="app-filter-bar">
+        <div class="filter-label">
+          <i class="bi bi-funnel me-1"></i> Filter
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-campus="all">All</button>
+          <% if (typeof campuses !== 'undefined' && campuses.length > 0) { %>
+            <% campuses.forEach(campus => { %>
+              <button class="filter-tab" data-campus="<%= campus %>"><%= campus %></button>
+            <% }) %>
+          <% } %>
+          <button class="filter-tab" data-campus="global">
+            <i class="bi bi-globe2 me-1"></i>Global
+          </button>
+        </div>
+        <div class="app-count ms-auto">
+          <span class="badge badge-portal" id="app-count-badge">
+            <i class="bi bi-grid-3x3 me-1"></i><span id="visible-count"><%= applications.length %></span> apps
+          </span>
+        </div>
+      </div>
+
+      <div class="app-grid" id="app-grid">
+        <% applications.forEach(app => { %>
+          <a href="/launch/<%= app.Id %>"
+             class="app-card"
+             data-campus="<%= app.Campus || 'global' %>"
+             data-app-code="<%= app.ApplicationCode %>"
+             target="_blank"
+             rel="noopener noreferrer"
+             title="<%= app.Application %><%= app.Campus ? ' — ' + app.Campus : '' %>">
+            <div class="app-card-icon" data-app="<%= app.ApplicationCode %>">
+              <i class="bi bi-<%= app.Icon || 'app-indicator' %>"></i>
+            </div>
+            <div class="app-card-body">
+              <h3 class="app-card-title"><%= app.Application %></h3>
+              <% if (app.Description) { %>
+                <p class="app-card-desc"><%= app.Description %></p>
+              <% } %>
+              <div class="app-card-meta">
+                <% if (app.Campus) { %>
+                  <span class="app-card-campus">
+                    <i class="bi bi-building me-1"></i><%= app.Campus %>
+                  </span>
+                <% } %>
+                <% if (app.Name) { %>
+                  <span class="app-card-type">
+                    <i class="bi bi-person me-1"></i><%= app.Name %>
+                  </span>
+                <% } %>
+              </div>
+            </div>
+            <div class="app-card-arrow">
+              <i class="bi bi-arrow-right"></i>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <!-- Empty state -->
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="bi bi-inbox"></i>
+        </div>
+        <h2 class="empty-state-title">No Applications Available</h2>
+        <p class="empty-state-text">
+          Applications will appear here once they are registered in the portal.
+        </p>
+        <% if (typeof userRoles !== 'undefined' && (userRoles.includes('PortalAdmin') || userRoles.includes('ITAdmin'))) { %>
+          <a href="/admin/applications" class="btn btn-primary-portal mt-3">
+            <i class="bi bi-plus-lg me-1"></i> Add Application
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</div>

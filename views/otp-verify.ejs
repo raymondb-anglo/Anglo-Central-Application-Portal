@@ -1,0 +1,59 @@
+<div class="login-page">
+  <!-- Animated background -->
+  <div class="login-bg">
+    <div class="login-bg-shape shape-1"></div>
+    <div class="login-bg-shape shape-2"></div>
+    <div class="login-bg-shape shape-3"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon" style="background: linear-gradient(135deg, #10b981, #06b6d4);">
+          <i class="bi bi-envelope-check-fill"></i>
+        </div>
+        <h1 class="login-title">Check Your Email</h1>
+        <p class="login-subtitle">We sent a 6-digit code to <strong><%= email %></strong></p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/auth/otp-verify" class="auth-form">
+        <input type="hidden" name="email" value="<%= email %>">
+
+        <div class="auth-input-group">
+          <label for="otp-code" class="form-label">Verification Code</label>
+          <input type="text" class="form-control otp-input" id="otp-code" name="code"
+                 placeholder="000000" maxlength="6" pattern="[0-9]{6}"
+                 autocomplete="one-time-code" inputmode="numeric" autofocus required>
+          <div class="form-text">Enter the 6-digit code from your email</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary-portal w-100">
+          <i class="bi bi-check-lg me-1"></i> Verify & Sign In
+        </button>
+      </form>
+
+      <div class="otp-actions">
+        <p class="otp-hint">
+          <i class="bi bi-clock me-1"></i> Code expires in 5 minutes
+        </p>
+        <form method="POST" action="/auth/otp-request" class="d-inline">
+          <input type="hidden" name="email" value="<%= email %>">
+          <button type="submit" class="btn-link-portal">
+            <i class="bi bi-arrow-clockwise me-1"></i> Resend Code
+          </button>
+        </form>
+        <span class="otp-separator">|</span>
+        <a href="/auth/login" class="btn-link-portal">
+          <i class="bi bi-arrow-left me-1"></i> Back to Sign In
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

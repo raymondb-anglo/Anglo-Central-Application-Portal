@@ -1,0 +1,55 @@
+<div class="admin-page">
+  <div class="container" style="max-width: 800px;">
+    <div class="admin-header">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <a href="/admin/roles" class="btn-back"><i class="bi bi-arrow-left"></i></a>
+        <h1 class="admin-title mb-0"><i class="bi bi-shield-check me-2"></i>Configure Role: <%= editRole.Name %></h1>
+      </div>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error %></span></div>
+    <% } %>
+
+    <form method="POST" action="/admin/roles/<%= editRole.Id %>" class="admin-form">
+      <div class="form-section">
+        <h3 class="form-section-title">Role Details</h3>
+        <div class="mb-3">
+          <label class="form-label">Role Name</label>
+          <input type="text" class="form-control" value="<%= editRole.Name %>" readonly>
+        </div>
+        <div>
+          <label for="description" class="form-label">Description</label>
+          <input type="text" class="form-control" id="description" name="description"
+                 value="<%= editRole.Description || '' %>" placeholder="Role description">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3 class="form-section-title">Application Access</h3>
+        <p class="form-text mb-3">Select which applications users with the <strong><%= editRole.Name %></strong> role can access.</p>
+        <div class="checkbox-grid">
+          <% applications.forEach(app => { %>
+            <label class="checkbox-card">
+              <input type="checkbox" name="applications" value="<%= app.Id %>"
+                     <%= roleAppIds.includes(app.Id) ? 'checked' : '' %>>
+              <div class="checkbox-card-body">
+                <span class="checkbox-card-title"><%= app.Application %></span>
+                <% if (app.Campus) { %>
+                  <span class="checkbox-card-desc"><i class="bi bi-building me-1"></i><%= app.Campus %></span>
+                <% } %>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/admin/roles" class="btn btn-secondary-portal">Cancel</a>
+        <button type="submit" class="btn btn-primary-portal">
+          <i class="bi bi-check-lg me-1"></i> Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

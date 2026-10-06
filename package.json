@@ -1,0 +1,28 @@
+{
+  "name": "anglo-central-application-portal",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Central Application Portal for Anglo Singapore International School",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:restart": "pm2 restart anglo-portal",
+    "pm2:stop": "pm2 stop anglo-portal",
+    "pm2:logs": "pm2 logs anglo-portal"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
+    "ejs": "^4.0.1",
+    "express": "^5.0.1",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "mssql": "^10.0.2",
+    "nodemailer": "^10.0.15",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}

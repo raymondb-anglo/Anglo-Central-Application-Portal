@@ -1,0 +1,74 @@
+<div class="admin-page">
+  <div class="container">
+    <div class="admin-header">
+      <h1 class="admin-title"><i class="bi bi-journal-text me-2"></i>Audit Logs</h1>
+      <p class="admin-subtitle">System activity and audit trail — <%= total %> total entries</p>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error %></span></div>
+    <% } %>
+
+    <% if (logs && logs.length > 0) { %>
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Application</th>
+              <th>IP Address</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td class="small text-muted text-nowrap">
+                  <%= log.Timestamp ? new Date(log.Timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—' %>
+                </td>
+                <td><%= log.UserEmail || log.UserName || '—' %></td>
+                <td>
+                  <span class="action-tag action-<%= log.Action.toLowerCase().includes('login') ? 'login' : log.Action.toLowerCase().includes('created') || log.Action.toLowerCase().includes('activated') ? 'create' : log.Action.toLowerCase().includes('deleted') || log.Action.toLowerCase().includes('deactivated') ? 'danger' : 'default' %>">
+                    <%= log.Action %>
+                  </span>
+                </td>
+                <td><%= log.AppName || '—' %></td>
+                <td class="small text-muted"><%= log.IPAddress || '—' %></td>
+                <td class="small" style="max-width: 250px;">
+                  <span class="text-truncate d-inline-block" style="max-width: 250px;" title="<%= log.Details || '' %>">
+                    <%= log.Details || '—' %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <nav class="pagination-nav">
+          <% if (page > 1) { %>
+            <a href="/admin/audit-logs?page=<%= page - 1 %>" class="btn btn-secondary-portal">
+              <i class="bi bi-chevron-left me-1"></i> Previous
+            </a>
+          <% } %>
+          <span class="pagination-info">Page <%= page %> of <%= totalPages %></span>
+          <% if (page < totalPages) { %>
+            <a href="/admin/audit-logs?page=<%= page + 1 %>" class="btn btn-secondary-portal">
+              Next <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          <% } %>
+        </nav>
+      <% } %>
+    <% } else { %>
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="bi bi-journal-text"></i></div>
+        <h2 class="empty-state-title">No Audit Logs</h2>
+        <p class="empty-state-text">Activity will be recorded here as users interact with the portal.</p>
+      </div>
+    <% } %>
+  </div>
+</div>

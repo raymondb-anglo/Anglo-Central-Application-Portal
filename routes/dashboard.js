@@ -1,0 +1,144 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { logAudit, getClientIP } from '../utils/auditLog.js';
+import db from '../db.js';
+
+const router = Router();
+
+/**
+ * GET / — Main portal dashboard
+ * Displays only the applications the authenticated user is authorized to access.
+ * 
+ * Access logic:
+ * 1. PortalAdmin / ITAdmin roles see ALL active applications
+ * 2. Other users see applications based on:
+ *    a. UserApplications table (per-user overrides) — if any exist
+ *    b. ApplicationRoles table (role-based access) — fallback
+ *    c. If neither has entries, show ALL active applications (open access)
+ */
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.Id;
+    const userRoles = req.userRoles || [];
+    const isAdmin = userRoles.includes('PortalAdmin') || userRoles.includes('ITAdmin');
+
+    let applications;
+
+    if (isAdmin) {
+      // Admins see all active applications
+      applications = await db.queryRows(
+        `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
+                DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO
+         FROM ApplicationInformation
+         WHERE Status = 'Active'
+         ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
+      );
+    } else {
+      // Check for per-user application access first
+      const userAppCount = await db.queryRows(
+        'SELECT COUNT(*) AS Cnt FROM UserApplications WHERE UserId = @p0', [userId]
+      );
+
+      if (userAppCount[0].Cnt > 0) {
+        // User has specific application assignments
+        applications = await db.queryRows(
+          `SELECT ai.Id, ai.ApplicationCode, ai.Application, ai.Campus, ai.Link, ai.Description,
+                  ai.DatabaseType, ai.Technology, ai.Name, ai.Icon, ai.DisplayOrder, ai.Status, ai.RequiresSSO
+           FROM ApplicationInformation ai
+           INNER JOIN UserApplications ua ON ua.ApplicationId = ai.Id
+           WHERE ua.UserId = @p0 AND ua.CanAccess = 1 AND ai.Status = 'Active'
+           ORDER BY ai.DisplayOrder ASC, ai.Application ASC, ai.Campus ASC`,
+          [userId]
+        );
+      } else {
+        // Check role-based access
+        const roleAppCount = await db.queryRows(
+          `SELECT COUNT(*) AS Cnt FROM ApplicationRoles ar
+           INNER JOIN UserRoles ur ON ur.RoleId = ar.RoleId
+           WHERE ur.UserId = @p0`, [userId]
+        );
+
+        if (roleAppCount[0].Cnt > 0) {
+          // User has role-based application access
+          applications = await db.queryRows(
+            `SELECT DISTINCT ai.Id, ai.ApplicationCode, ai.Application, ai.Campus, ai.Link, ai.Description,
+                    ai.DatabaseType, ai.Technology, ai.Name, ai.Icon, ai.DisplayOrder, ai.Status, ai.RequiresSSO
+             FROM ApplicationInformation ai
+             INNER JOIN ApplicationRoles ar ON ar.ApplicationId = ai.Id
+             INNER JOIN UserRoles ur ON ur.RoleId = ar.RoleId
+             WHERE ur.UserId = @p0 AND ar.CanAccess = 1 AND ai.Status = 'Active'
+             ORDER BY ai.DisplayOrder ASC, ai.Application ASC, ai.Campus ASC`,
+            [userId]
+          );
+        } else {
+          // No specific permissions configured — show all active apps (open access)
+          applications = await db.queryRows(
+            `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
+                    DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO
+             FROM ApplicationInformation
+             WHERE Status = 'Active'
+             ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
+          );
+        }
+      }
+    }
+
+    // Extract unique campuses for the filter tabs
+    const campuses = [...new Set(
+      applications
+        .map(app => app.Campus)
+        .filter(c => c !== null && c !== '')
+    )].sort();
+
+    res.render('dashboard', {
+      layout: 'layout',
+      title: 'Application Portal',
+      applications,
+      campuses,
+      user: req.user
+    });
+  } catch (err) {
+    console.error('[DASHBOARD] Error loading applications:', err.message);
+    res.render('dashboard', {
+      layout: 'layout',
+      title: 'Application Portal',
+      applications: [],
+      campuses: [],
+      user: req.user,
+      error: 'Failed to load applications. Please try again later.'
+    });
+  }
+});
+
+/**
+ * GET /launch/:id — Log application access and redirect
+ */
+router.get('/launch/:id', requireAuth, async (req, res) => {
+  try {
+    const appId = parseInt(req.params.id, 10);
+    const rows = await db.queryRows(
+      'SELECT Id, Application, Link FROM ApplicationInformation WHERE Id = @p0 AND Status = @p1',
+      [appId, 'Active']
+    );
+
+    if (rows.length === 0) {
+      return res.redirect('/?error=' + encodeURIComponent('Application not found or inactive.'));
+    }
+
+    // Log the access
+    await logAudit({
+      userId: req.user.Id,
+      action: 'APP_ACCESS',
+      applicationId: appId,
+      ipAddress: getClientIP(req),
+      details: `Accessed: ${rows[0].Application}`
+    });
+
+    res.redirect(rows[0].Link);
+  } catch (err) {
+    console.error('[DASHBOARD] Launch error:', err.message);
+    res.redirect('/');
+  }
+});
+
+export default router;

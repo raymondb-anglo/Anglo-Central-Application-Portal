@@ -1,0 +1,86 @@
+<div class="admin-page">
+  <div class="container">
+    <div class="admin-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h1 class="admin-title"><i class="bi bi-people me-2"></i>User Management</h1>
+        <p class="admin-subtitle">Manage portal users, roles, and application access.</p>
+      </div>
+      <a href="/admin/users/new" class="btn btn-primary-portal">
+        <i class="bi bi-person-plus me-1"></i> Add User
+      </a>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill"></i><span><%= success %></span></div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error %></span></div>
+    <% } %>
+
+    <% if (users && users.length > 0) { %>
+      <div class="admin-stats">
+        <div class="stat-card"><div class="stat-value"><%= users.length %></div><div class="stat-label">Total Users</div></div>
+        <div class="stat-card"><div class="stat-value"><%= users.filter(u => u.IsActive).length %></div><div class="stat-label">Active</div></div>
+        <div class="stat-card"><div class="stat-value"><%= users.filter(u => !u.IsActive).length %></div><div class="stat-label">Inactive</div></div>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Roles</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(u => { %>
+              <tr class="<%= !u.IsActive ? 'row-inactive' : '' %>">
+                <td>
+                  <div class="fw-semibold"><%= u.DisplayName || (u.FirstName + ' ' + u.LastName).trim() || '—' %></div>
+                </td>
+                <td><%= u.Email %></td>
+                <td>
+                  <% if (u.RoleNames) { %>
+                    <% u.RoleNames.split(', ').forEach(role => { %>
+                      <span class="role-badge"><%= role %></span>
+                    <% }) %>
+                  <% } else { %>
+                    <span class="text-muted">No roles</span>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="status-badge status-<%= u.IsActive ? 'active' : 'inactive' %>">
+                    <%= u.IsActive ? 'Active' : 'Inactive' %>
+                  </span>
+                </td>
+                <td class="text-muted small">
+                  <%= u.LastLoginAt ? new Date(u.LastLoginAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Never' %>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <a href="/admin/users/<%= u.Id %>/edit" class="btn-action btn-action-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                    <form method="POST" action="/admin/users/<%= u.Id %>/toggle" class="d-inline">
+                      <button type="submit" class="btn-action btn-action-toggle" title="<%= u.IsActive ? 'Deactivate' : 'Activate' %>">
+                        <i class="bi bi-<%= u.IsActive ? 'pause-circle' : 'play-circle' %>"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="bi bi-people"></i></div>
+        <h2 class="empty-state-title">No Users</h2>
+        <p class="empty-state-text">Users will appear here when they log in via Google OAuth or are added manually.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
