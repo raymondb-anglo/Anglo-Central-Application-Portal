@@ -10,8 +10,8 @@ Central entry point for Anglo Singapore International School applications.
 - **Templating**: EJS + express-ejs-layouts
 - **Frontend**: Bootstrap 5, Vanilla JavaScript, Inter (Google Fonts)
 - **Authentication**: Google OAuth 2.0 via Passport.js
-- **Process Manager**: PM2
-- **Web Server**: IIS + iisnode
+- **Process Manager**: PM2 (running on Linux server)
+- **Web Server / Gateway**: IIS (Reverse Proxy via ARR + URL Rewrite + Wildcard SSL)
 
 ## Quick Start (Local Development)
 
@@ -34,10 +34,28 @@ The portal will start at `http://localhost:3000`.
 In development mode, a **Dev Login** form is available on the login page,
 allowing testing without Google OAuth credentials configured.
 
+## PM2 Production Commands
+
+```bash
+# Start with PM2
+npm run pm2:start
+
+# Restart process
+npm run pm2:restart
+
+# Stop process
+npm run pm2:stop
+
+# View live PM2 logs
+npm run pm2:logs
+```
+
+For complete production deployment instructions including IIS reverse proxy and environment configuration, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Project Structure
 
 ```
-├── server.js              ← Express entry point
+├── server.js              ← Express entry point (trust proxy, security, routes)
 ├── db.js                  ← MSSQL connection pool
 ├── config/passport.js     ← Google OAuth strategy
 ├── middleware/auth.js      ← Auth & RBAC middleware
@@ -55,9 +73,9 @@ allowing testing without Google OAuth credentials configured.
 ├── sql/
 │   ├── schema.sql         ← Database schema (7 tables)
 │   └── seed.sql           ← Initial application data
-├── web.config             ← IIS/iisnode configuration
+├── web.config             ← IIS Reverse Proxy (ARR) configuration
 ├── ecosystem.config.cjs   ← PM2 configuration
-├── DEPLOYMENT.md          ← Deployment guide
+├── DEPLOYMENT.md          ← Full deployment guide (PM2 + IIS)
 └── .env.example           ← Environment template
 ```
 

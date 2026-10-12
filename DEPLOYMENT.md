@@ -72,37 +72,96 @@ node server.js
 
 Verify it starts on the configured port and connects to the database.
 
-## 6. Start with PM2
+## 6. Create Logs Directory
+
+PM2 writes stdout and stderr logs to `./logs`:
+
+```bash
+mkdir -p logs
+```
+
+## 7. Start with PM2
+
+Start via PM2 ecosystem configuration:
 
 ```bash
 pm2 start ecosystem.config.cjs
 ```
 
-## 7. Enable PM2 Startup (Auto-start on Reboot)
+Or via npm script:
+
+```bash
+npm run pm2:start
+```
+
+## 8. Enable PM2 Startup (Auto-start on Reboot)
 
 ```bash
 pm2 startup
 pm2 save
 ```
 
-## 8. Deploy to IIS
-
-1. Create a new IIS website pointing to the project directory
-2. Ensure iisnode is installed
-3. The `web.config` handles URL rewriting and iisnode configuration
-4. Configure HTTPS via IIS SSL bindings
-5. Set the site binding to `apps.anglosingapore.ac.th`
-
 ## 9. Common PM2 Commands
 
 | Command | Description |
 |---------|-------------|
-| `pm2 status` | Check running processes |
+| `pm2 status` / `pm2 list` | Check running processes |
 | `pm2 logs anglo-portal` | View live logs |
+| `pm2 logs anglo-portal --lines 50` | View last 50 log lines |
 | `pm2 restart anglo-portal` | Restart the app |
 | `pm2 stop anglo-portal` | Stop the app |
+| `pm2 delete anglo-portal` | Remove from PM2 |
+| `pm2 monit` | Real-time terminal monitoring |
 
-## 10. Updating the Application
+## 10. Log Files
+
+PM2 logs are stored in:
+
+- Output: `./logs/pm2-out.log`
+- Errors: `./logs/pm2-error.log`
+
+## 11. IIS Reverse Proxy Setup (ARR + URL Rewrite)
+
+On your Windows IIS Server (`apps.anglosingapore.ac.th`):
+
+1. **Prerequisites in IIS**:
+   - Install **Application Request Routing (ARR)** and **URL Rewrite** module.
+   - Enable Proxy in ARR (*Application Request Routing* -> *Server Proxy Settings* -> check *Enable proxy*).
+2. **Allowed Server Variables**:
+   - In IIS Manager, select your site -> double-click **URL Rewrite**.
+   - Under Actions (right panel), click **View Server Variables...**
+   - Add:
+     - `HTTP_X_FORWARDED_PROTO`
+     - `HTTP_X_FORWARDED_HOST`
+3. **`web.config`**:
+   Place the following `web.config` inside the IIS website root directory:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="ReverseProxyToAngloPortal" stopProcessing="true">
+          <match url="^(.*)$" />
+          <action type="Rewrite" url="http://172.16.10.20:3000/{R:1}" appendQueryString="true" />
+          <serverVariables>
+            <set name="HTTP_X_FORWARDED_PROTO" value="https" />
+            <set name="HTTP_X_FORWARDED_HOST" value="{HTTP_HOST}" />
+          </serverVariables>
+        </rule>
+      </rules>
+    </rewrite>
+    <directoryBrowse enabled="false" />
+  </system.webServer>
+</configuration>
+```
+
+4. **SSL Bindings**:
+   - Bind port 443 with your wildcard SSL Certificate (`*.anglosingapore.ac.th`).
+   - Host name: `apps.anglosingapore.ac.th`.
+
+## 12. Updating the Application
 
 ```bash
 cd anglo-central-portal
@@ -119,6 +178,6 @@ pm2 restart anglo-portal
 - **Frontend**: Bootstrap 5, Vanilla JavaScript
 - **Auth**: Google OAuth 2.0 via Passport.js
 - **Session**: express-session
-- **Security**: Helmet.js
-- **Process Manager**: PM2
-- **Web Server**: IIS + iisnode
+- **Security**: Helmet.js + trust proxy
+- **Process Manager**: PM2 (Linux server: `172.16.10.20`)
+- **Web Server / Gateway**: IIS (Reverse Proxy with ARR + SSL)

@@ -23,6 +23,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust reverse proxy (IIS / Nginx) so HTTPS and secure cookies work properly
+app.set('trust proxy', 1);
+
 // ---- Security ----
 app.use(helmet({
   contentSecurityPolicy: {
