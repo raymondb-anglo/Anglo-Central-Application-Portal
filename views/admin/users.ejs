@@ -5,9 +5,17 @@
         <h1 class="admin-title"><i class="bi bi-people me-2"></i>User Management</h1>
         <p class="admin-subtitle">Manage portal users, roles, and application access.</p>
       </div>
-      <a href="/admin/users/new" class="btn btn-primary-portal">
-        <i class="bi bi-person-plus me-1"></i> Add User
-      </a>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="/admin/users/template" class="btn btn-secondary-portal" title="Download sample CSV template">
+          <i class="bi bi-download me-1"></i> Download Template
+        </a>
+        <button type="button" class="btn btn-secondary-portal" data-bs-toggle="modal" data-bs-target="#importUsersModal">
+          <i class="bi bi-file-earmark-arrow-up me-1"></i> Bulk Import (CSV)
+        </button>
+        <a href="/admin/users/new" class="btn btn-primary-portal">
+          <i class="bi bi-person-plus me-1"></i> Add User
+        </a>
+      </div>
     </div>
 
     <% if (typeof success !== 'undefined' && success) { %>
@@ -86,5 +94,52 @@
         <p class="empty-state-text">Users will appear here when they log in via Google OAuth or are added manually.</p>
       </div>
     <% } %>
+  </div>
+
+  <!-- Bulk Import Users Modal -->
+  <div class="modal fade" id="importUsersModal" tabindex="-1" aria-labelledby="importUsersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form method="POST" action="/admin/users/import" enctype="multipart/form-data">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold" id="importUsersModalLabel">
+              <i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Bulk Import Users
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body py-3">
+            <p class="text-muted small mb-3">
+              Upload a CSV file to create or update user accounts in bulk. Unspecified roles default to <strong>Student</strong> (suitable for parents to access live booking sites).
+            </p>
+
+            <div class="mb-3">
+              <label for="csvFile" class="form-label fw-semibold">Select CSV File (.csv)</label>
+              <input type="file" class="form-control" id="csvFile" name="csvFile" accept=".csv" required>
+            </div>
+
+            <div class="p-3 rounded-3" style="background: rgba(148, 163, 184, 0.08); font-size: 0.85rem;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold">CSV Column Format:</span>
+                <a href="/admin/users/template" class="text-decoration-none small">
+                  <i class="bi bi-download me-1"></i>Download Template
+                </a>
+              </div>
+              <code class="d-block text-secondary mb-2" style="word-break: break-all;">Email,DisplayName,FirstName,LastName,Role,Campus</code>
+              <div class="text-muted small">
+                • <strong>Email</strong> is required.<br>
+                • <strong>Role</strong> defaults to <code>Student</code> if blank.<br>
+                • <strong>Campus</strong> (e.g. <code>64</code>, <code>31</code>, or <code>Korat</code>) will automatically map live campus booking apps.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-secondary-portal" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-portal">
+              <i class="bi bi-cloud-arrow-up me-1"></i> Start Import
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </div>

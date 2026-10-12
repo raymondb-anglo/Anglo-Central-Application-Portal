@@ -21,6 +21,7 @@
     "helmet": "^8.0.0",
     "morgan": "^1.10.0",
     "mssql": "^10.0.2",
+    "multer": "^2.4.0",
     "nodemailer": "^10.0.15",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
