@@ -29,8 +29,8 @@
 
   /* Text */
   --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
   /* Borders */
   --border-color: rgba(148, 163, 184, 0.12);
@@ -105,6 +105,28 @@ a:hover {
 ::selection {
   background: var(--color-primary);
   color: white;
+}
+
+/* ---- High-Contrast Text Utility Overrides for Dark Mode ---- */
+.text-muted,
+[data-bs-theme="dark"] .text-muted,
+.admin-table .text-muted,
+.admin-table td.text-muted,
+.admin-table td .text-muted,
+.admin-table span.text-muted,
+.admin-table div.text-muted,
+td.text-muted,
+span.text-muted,
+div.text-muted,
+p.text-muted,
+small.text-muted,
+.small.text-muted {
+  color: #94a3b8 !important; /* Slate-400: clear, readable contrast against dark surfaces */
+}
+
+.text-secondary-portal,
+.admin-table .text-secondary {
+  color: #cbd5e1 !important; /* Slate-300: brighter secondary text */
 }
 
 /* ---- Scrollbar ---- */
@@ -1127,6 +1149,26 @@ a:hover {
   vertical-align: middle;
 }
 
+.admin-table tbody td.text-muted,
+.admin-table tbody td .text-muted {
+  color: #94a3b8 !important;
+}
+
+.admin-table tbody td.small,
+.admin-table tbody td .small {
+  font-size: var(--font-size-xs);
+  color: #94a3b8 !important;
+}
+
+.admin-table .app-table-link {
+  color: #94a3b8 !important;
+  font-size: var(--font-size-xs);
+}
+
+.admin-table .app-table-link:hover {
+  color: #cbd5e1 !important;
+}
+
 .admin-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -1136,7 +1178,7 @@ a:hover {
 }
 
 .admin-table tbody tr.row-inactive {
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .admin-table code {

@@ -41,9 +41,12 @@
               <button class="filter-tab" data-campus="<%= campus %>"><%= campus %></button>
             <% }) %>
           <% } %>
-          <button class="filter-tab" data-campus="global">
-            <i class="bi bi-globe2 me-1"></i>Global
-          </button>
+          <% const hasGlobal = applications.some(app => !app.Campus); %>
+          <% if (hasGlobal) { %>
+            <button class="filter-tab" data-campus="global">
+              <i class="bi bi-globe2 me-1"></i>Global
+            </button>
+          <% } %>
         </div>
         <div class="app-count ms-auto">
           <span class="badge badge-portal" id="app-count-badge">

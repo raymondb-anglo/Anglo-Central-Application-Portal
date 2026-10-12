@@ -20,17 +20,27 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const userId = req.user.Id;
     const userRoles = req.userRoles || [];
-    const isAdmin = userRoles.includes('PortalAdmin') || userRoles.includes('ITAdmin');
+    const isPortalAdmin = userRoles.includes('PortalAdmin');
+    const isAppAdmin = userRoles.includes('ApplicationAdmin') || userRoles.includes('ITAdmin');
 
     let applications;
 
-    if (isAdmin) {
-      // Admins see all active applications
+    if (isPortalAdmin) {
+      // Portal Admins see ALL links (both Student and Admin versions)
       applications = await db.queryRows(
         `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
                 DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO
          FROM ApplicationInformation
          WHERE Status = 'Active'
+         ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
+      );
+    } else if (isAppAdmin) {
+      // Student Affairs / App Admins see ONLY Admin links
+      applications = await db.queryRows(
+        `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
+                DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO
+         FROM ApplicationInformation
+         WHERE Status = 'Active' AND Name = 'Admin'
          ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
       );
     } else {
@@ -71,12 +81,12 @@ router.get('/', requireAuth, async (req, res) => {
             [userId]
           );
         } else {
-          // No specific permissions configured — show all active apps (open access)
+          // No specific permissions configured — show active apps, but hide Admin links for safety
           applications = await db.queryRows(
             `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
                     DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO
              FROM ApplicationInformation
-             WHERE Status = 'Active'
+             WHERE Status = 'Active' AND (Name IS NULL OR Name != 'Admin')
              ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
           );
         }
