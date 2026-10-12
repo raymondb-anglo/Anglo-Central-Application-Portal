@@ -13,6 +13,23 @@ Central entry point for Anglo Singapore International School applications.
 - **Process Manager**: PM2 (running on Linux server)
 - **Web Server / Gateway**: IIS (Reverse Proxy via ARR + URL Rewrite + Wildcard SSL)
 
+## Screenshots
+
+### 1. Landing Page (Login)
+![Landing Page](docs/screenshots/01-landing-page.png)
+
+### 2. Dashboard (Portal Admin)
+![Dashboard](docs/screenshots/02-dashboard.png)
+
+### 3. Application Registry
+![Application Registry](docs/screenshots/03-applications.png)
+
+### 4. Role Management
+![Role Management](docs/screenshots/04-roles.png)
+
+### 5. Audit Logs
+![Audit Logs](docs/screenshots/05-audit-logs.png)
+
 ## Quick Start (Local Development)
 
 ```bash
