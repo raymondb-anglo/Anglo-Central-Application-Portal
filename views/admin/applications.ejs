@@ -90,13 +90,19 @@
                       <i class="bi bi-pencil"></i>
                     </a>
                     <form method="POST" action="/admin/applications/<%= app.Id %>/toggle" class="d-inline"
-                          onsubmit="return confirm('<%= app.Status === 'Active' ? 'Are you sure you want to DEACTIVATE this application?\\n\\n' + app.Application + ' will be hidden from users on the dashboard.' : 'Are you sure you want to ACTIVATE ' + app.Application + '?' %>')">
+                          data-confirm="Are you sure you want to <%= app.Status === 'Active' ? 'DEACTIVATE this application? ' + app.Application + ' will be hidden from users on the dashboard.' : 'ACTIVATE ' + app.Application + '?' %>"
+                          data-confirm-title="<%= app.Status === 'Active' ? 'Deactivate Application' : 'Activate Application' %>"
+                          data-confirm-btn="<%= app.Status === 'Active' ? 'Deactivate' : 'Activate' %>"
+                          data-confirm-type="<%= app.Status === 'Active' ? 'warning' : 'primary' %>">
                       <button type="submit" class="btn-action btn-action-toggle" title="<%= app.Status === 'Active' ? 'Deactivate' : 'Activate' %>">
                         <i class="bi bi-<%= app.Status === 'Active' ? 'pause-circle' : 'play-circle' %>"></i>
                       </button>
                     </form>
                     <form method="POST" action="/admin/applications/<%= app.Id %>/delete" class="d-inline"
-                          onsubmit="return confirm('⚠️ Are you sure you want to DELETE this application?\\n\\n' + '<%= app.Application %>' + '\\n\\nThis will permanently remove the application and role assignments. This action cannot be undone.')">
+                          data-confirm="Are you sure you want to permanently delete '<%= app.Application %>'? This will remove the application and role assignments. This action cannot be undone."
+                          data-confirm-title="Delete Application"
+                          data-confirm-btn="Delete"
+                          data-confirm-type="danger">
                       <button type="submit" class="btn-action btn-action-delete" title="Delete">
                         <i class="bi bi-trash3"></i>
                       </button>

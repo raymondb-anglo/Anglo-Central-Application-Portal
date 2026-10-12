@@ -148,4 +148,76 @@ document.addEventListener('DOMContentLoaded', () => {
       applyTheme(next);
     });
   });
+
+  // ---- Universal In-App Confirmation Modal ----
+  const modalEl = document.getElementById('portalConfirmModal');
+  const modalTitle = document.getElementById('portalConfirmModalTitle');
+  const modalMessage = document.getElementById('portalConfirmModalMessage');
+  const modalIcon = document.getElementById('portalConfirmModalIcon');
+  const modalBtn = document.getElementById('portalConfirmModalBtn');
+  let targetForm = null;
+
+  let confirmModalInstance = null;
+  if (modalEl && typeof bootstrap !== 'undefined') {
+    confirmModalInstance = new bootstrap.Modal(modalEl);
+  }
+
+  document.addEventListener('submit', (e) => {
+    const form = e.target.closest ? e.target.closest('form') : e.target;
+    if (!form || !form.hasAttribute('data-confirm')) return;
+
+    if (form.dataset.confirmed === 'true') {
+      form.removeAttribute('data-confirmed');
+      return; // allow normal submission
+    }
+
+    e.preventDefault();
+    targetForm = form;
+
+    const title = form.getAttribute('data-confirm-title') || 'Confirm Action';
+    const message = form.getAttribute('data-confirm') || 'Are you sure you want to proceed?';
+    const btnText = form.getAttribute('data-confirm-btn') || 'Confirm';
+    const type = form.getAttribute('data-confirm-type') || 'primary';
+
+    if (confirmModalInstance) {
+      if (modalTitle) modalTitle.textContent = title;
+      if (modalMessage) modalMessage.textContent = message;
+      if (modalIcon) {
+        if (type === 'danger') {
+          modalIcon.className = 'bi bi-trash3-fill text-danger me-2';
+        } else if (type === 'warning') {
+          modalIcon.className = 'bi bi-exclamation-triangle-fill text-warning me-2';
+        } else {
+          modalIcon.className = 'bi bi-question-circle-fill text-primary me-2';
+        }
+      }
+      if (modalBtn) {
+        modalBtn.textContent = btnText;
+        if (type === 'danger') {
+          modalBtn.className = 'btn btn-danger';
+        } else if (type === 'warning') {
+          modalBtn.className = 'btn btn-warning text-dark fw-semibold';
+        } else {
+          modalBtn.className = 'btn btn-primary-portal';
+        }
+      }
+      confirmModalInstance.show();
+    } else {
+      // Fallback
+      if (window.confirm(message)) {
+        form.dataset.confirmed = 'true';
+        form.submit();
+      }
+    }
+  });
+
+  if (modalBtn) {
+    modalBtn.addEventListener('click', () => {
+      if (targetForm) {
+        targetForm.dataset.confirmed = 'true';
+        if (confirmModalInstance) confirmModalInstance.hide();
+        targetForm.submit();
+      }
+    });
+  }
 });
