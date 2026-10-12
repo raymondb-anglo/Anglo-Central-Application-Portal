@@ -106,4 +106,46 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // ---- Theme Toggle (Dark & Light Mode — Anglobot Reference) ----
+  function getTheme() {
+    return localStorage.getItem('portal_theme') || 'dark';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('portal_theme', theme);
+
+    // Update all theme toggle buttons on the page
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+      const textEl = btn.querySelector('.theme-toggle-text');
+      const sunIcon = btn.querySelector('.theme-icon-sun');
+      const moonIcon = btn.querySelector('.theme-icon-moon');
+
+      if (theme === 'dark') {
+        if (textEl) textEl.textContent = 'Light Mode';
+        if (sunIcon) sunIcon.style.display = 'inline-block';
+        if (moonIcon) moonIcon.style.display = 'none';
+        btn.setAttribute('title', 'Switch to Light Mode');
+      } else {
+        if (textEl) textEl.textContent = 'Dark Mode';
+        if (sunIcon) sunIcon.style.display = 'none';
+        if (moonIcon) moonIcon.style.display = 'inline-block';
+        btn.setAttribute('title', 'Switch to Dark Mode');
+      }
+    });
+  }
+
+  // Initialize button state immediately
+  applyTheme(getTheme());
+
+  // Attach click handler to all theme toggle buttons
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const current = getTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+    });
+  });
 });

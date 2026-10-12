@@ -28,7 +28,7 @@
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                 <i class="bi bi-gear"></i> Admin
               </a>
-              <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+              <ul class="dropdown-menu portal-dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="/admin/applications"><i class="bi bi-app-indicator me-2"></i>Applications</a></li>
                 <li><a class="dropdown-item" href="/admin/users"><i class="bi bi-people me-2"></i>Users</a></li>
                 <li><a class="dropdown-item" href="/admin/roles"><i class="bi bi-shield-lock me-2"></i>Roles</a></li>
@@ -37,6 +37,14 @@
               </ul>
             </li>
           <% } %>
+
+          <li class="nav-item">
+            <button class="theme-toggle-btn" id="theme-toggle-btn" type="button" aria-label="Toggle theme">
+              <i class="bi bi-brightness-high theme-icon-sun"></i>
+              <i class="bi bi-moon theme-icon-moon"></i>
+              <span class="theme-toggle-text">Light Mode</span>
+            </button>
+          </li>
 
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
@@ -49,7 +57,7 @@
               <% } %>
               <span class="d-none d-md-inline"><%= user ? user.DisplayName || user.Email : 'User' %></span>
             </a>
-            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+            <ul class="dropdown-menu portal-dropdown-menu dropdown-menu-end">
               <li class="dropdown-item-text text-muted small">
                 <i class="bi bi-envelope me-1"></i>
                 <%= user ? user.Email : '' %>
@@ -63,6 +71,14 @@
             </ul>
           </li>
         </ul>
+      </div>
+    <% } else { %>
+      <div class="d-flex align-items-center ms-auto">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" type="button" aria-label="Toggle theme">
+          <i class="bi bi-brightness-high theme-icon-sun"></i>
+          <i class="bi bi-moon theme-icon-moon"></i>
+          <span class="theme-toggle-text">Light Mode</span>
+        </button>
       </div>
     <% } %>
   </div>
