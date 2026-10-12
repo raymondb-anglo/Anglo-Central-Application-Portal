@@ -31,14 +31,17 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "*.cloudflareinsights.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
       fontSrc: ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:", "*.googleusercontent.com"],
-      connectSrc: ["'self'"]
+      connectSrc: ["'self'", "cdn.jsdelivr.net", "*.cloudflareinsights.com"]
     }
   }
 }));
+
+// Suppress 404 for favicon request
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ---- Logging ----
 app.use(morgan('short'));
