@@ -205,7 +205,10 @@ router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (r
       await db.query('INSERT INTO UserApplications (UserId, ApplicationId, CanAccess) VALUES (@p0, @p1, 1)', [id, parseInt(aid, 10)]);
     }
 
-    // Clear cached session roles for this user
+    // Clear cached session roles if editing own account
+    if (req.user && req.user.Id === id) {
+      delete req.session.userRoles;
+    }
     await logAudit({ userId: req.user?.Id, action: 'USER_UPDATED', ipAddress: getClientIP(req), details: `Updated user ID ${id}` });
 
     res.redirect('/admin/users?success=' + encodeURIComponent('User updated successfully.'));

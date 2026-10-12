@@ -79,7 +79,7 @@
           <% roles.forEach(role => { %>
             <label class="checkbox-card">
               <input type="checkbox" name="roles" value="<%= role.Id %>"
-                     <%= userRoleIds.includes(role.Id) ? 'checked' : '' %>>
+                     <%= userRoleIds.map(Number).includes(Number(role.Id)) ? 'checked' : '' %>>
               <div class="checkbox-card-body">
                 <span class="checkbox-card-title"><%= role.Name %></span>
                 <% if (role.Description) { %>
@@ -99,7 +99,7 @@
           <% applications.forEach(app => { %>
             <label class="checkbox-card">
               <input type="checkbox" name="applications" value="<%= app.Id %>"
-                     <%= userAppIds.includes(app.Id) ? 'checked' : '' %>>
+                     <%= userAppIds.map(Number).includes(Number(app.Id)) ? 'checked' : '' %>>
               <div class="checkbox-card-body">
                 <span class="checkbox-card-title"><%= app.Application %></span>
                 <% if (app.Campus) { %>

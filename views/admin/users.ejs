@@ -63,7 +63,8 @@
                 <td>
                   <div class="action-btns">
                     <a href="/admin/users/<%= u.Id %>/edit" class="btn-action btn-action-edit" title="Edit"><i class="bi bi-pencil"></i></a>
-                    <form method="POST" action="/admin/users/<%= u.Id %>/toggle" class="d-inline">
+                    <form method="POST" action="/admin/users/<%= u.Id %>/toggle" class="d-inline"
+                          onsubmit="return confirm('<%= u.IsActive ? 'Are you sure you want to DEACTIVATE ' + (u.DisplayName || u.Email) + '?\\n\\nThis user will not be able to log in to the portal.' : 'Are you sure you want to ACTIVATE ' + (u.DisplayName || u.Email) + '?' %>')">
                       <button type="submit" class="btn-action btn-action-toggle" title="<%= u.IsActive ? 'Deactivate' : 'Activate' %>">
                         <i class="bi bi-<%= u.IsActive ? 'pause-circle' : 'play-circle' %>"></i>
                       </button>

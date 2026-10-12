@@ -274,7 +274,9 @@ router.post('/:id/delete', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), a
       return res.redirect('/admin/applications?error=' + encodeURIComponent('Application not found.'));
     }
 
-    // Delete related records first
+    // Disassociate audit logs first to satisfy MSSQL foreign key constraint while preserving audit trail
+    await db.query('UPDATE AuditLogs SET ApplicationId = NULL WHERE ApplicationId = @p0', [id]);
+    // Delete related records
     await db.query('DELETE FROM ApplicationRoles WHERE ApplicationId = @p0', [id]);
     await db.query('DELETE FROM UserApplications WHERE ApplicationId = @p0', [id]);
     await db.query('DELETE FROM ApplicationInformation WHERE Id = @p0', [id]);

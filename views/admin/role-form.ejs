@@ -32,7 +32,7 @@
           <% applications.forEach(app => { %>
             <label class="checkbox-card">
               <input type="checkbox" name="applications" value="<%= app.Id %>"
-                     <%= roleAppIds.includes(app.Id) ? 'checked' : '' %>>
+                     <%= roleAppIds.map(Number).includes(Number(app.Id)) ? 'checked' : '' %>>
               <div class="checkbox-card-body">
                 <span class="checkbox-card-title"><%= app.Application %></span>
                 <% if (app.Campus) { %>

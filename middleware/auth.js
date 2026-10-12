@@ -50,18 +50,12 @@ export function requireRole(...roles) {
 export async function loadUserRoles(req, res, next) {
   if (!req.user) {
     req.userRoles = [];
+    res.locals.userRoles = [];
     return next();
   }
 
   try {
-    // Check if roles are cached in session
-    if (req.session.userRoles) {
-      req.userRoles = req.session.userRoles;
-      res.locals.userRoles = req.session.userRoles;
-      return next();
-    }
-
-    // Load from database
+    // Load fresh roles from database
     const db = (await import('../db.js')).default;
     const rows = await db.queryRows(
       `SELECT r.Name FROM Roles r
