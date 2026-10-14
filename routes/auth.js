@@ -427,9 +427,10 @@ router.post('/forgot-password', async (req, res) => {
       [tokenHash, expiresAt.toISOString(), user.Id]
     );
 
-    // Build reset URL dynamically from the actual request (works in all environments)
-    // req.protocol respects X-Forwarded-Proto via 'trust proxy' in server.js
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    // Build reset URL using BASE_URL from .env (required for production)
+    // IIS/Nginx reverse proxies forward the internal IP as Host header,
+    // so we cannot rely on req.get('host') for public-facing email links.
+    const baseUrl = (process.env.BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
     const resetUrl = `${baseUrl}/auth/reset-password?token=${rawToken}`;
 
     // Send reset email
