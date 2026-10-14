@@ -22,6 +22,12 @@
           <span><%= error %></span>
         </div>
       <% } %>
+      <% if (typeof info !== 'undefined' && info) { %>
+        <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+          <i class="bi bi-info-circle-fill"></i>
+          <span><%= info %></span>
+        </div>
+      <% } %>
 
       <form method="POST" action="/auth/otp-verify" class="auth-form">
         <input type="hidden" name="email" value="<%= email %>">

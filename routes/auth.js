@@ -1,11 +1,56 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import passport from '../config/passport.js';
 import { logAudit, getClientIP } from '../utils/auditLog.js';
-import { sendOTP, generateOTP } from '../utils/email.js';
+import { sendOTP, generateOTP, sendPasswordReset } from '../utils/email.js';
 import db from '../db.js';
 
 const router = Router();
+
+// =====================================================
+// Rate Limiting (in-memory store)
+// Max 5 requests per email per 15 minutes
+// =====================================================
+const rateLimitStore = new Map();
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+/**
+ * Check if an email has exceeded the rate limit for a given action.
+ * @param {string} email - The email address
+ * @param {string} action - The action type (e.g., 'otp', 'forgot-password')
+ * @returns {boolean} true if rate limited (blocked)
+ */
+function isRateLimited(email, action) {
+  const key = `${action}:${email.toLowerCase()}`;
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  if (!entry) {
+    rateLimitStore.set(key, { count: 1, firstRequest: now });
+    return false;
+  }
+
+  // Reset window if expired
+  if (now - entry.firstRequest > RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(key, { count: 1, firstRequest: now });
+    return false;
+  }
+
+  entry.count++;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
+// Periodically clean up expired rate limit entries (every 10 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore) {
+    if (now - entry.firstRequest > RATE_LIMIT_WINDOW_MS) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
 
 /**
  * GET /auth/login — Display login page
@@ -87,6 +132,8 @@ router.post('/password-login', async (req, res) => {
     );
 
     if (rows.length === 0) {
+      // Run bcrypt hash anyway to prevent timing attacks (OWASP recommendation)
+      await bcrypt.hash('dummy-password', 12);
       return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Invalid email or password.'));
     }
 
@@ -136,6 +183,7 @@ router.post('/password-login', async (req, res) => {
 
 /**
  * POST /auth/otp-request — Send OTP code to user's email
+ * Uses OWASP-compliant generic response message.
  */
 router.post('/otp-request', async (req, res) => {
   try {
@@ -145,20 +193,45 @@ router.post('/otp-request', async (req, res) => {
       return res.redirect('/auth/login?tab=otp&error=' + encodeURIComponent('Email is required.'));
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Rate limiting check
+    if (isRateLimited(normalizedEmail, 'otp')) {
+      return res.redirect('/auth/login?tab=otp&error=' + encodeURIComponent('Too many requests. Please try again later.'));
+    }
+
     // Find user
     const rows = await db.queryRows(
       'SELECT Id, Email, IsActive FROM Users WHERE Email = @p0',
-      [email.trim().toLowerCase()]
+      [normalizedEmail]
     );
 
+    // OWASP: Always show the same generic success message regardless of whether email exists.
+    // This prevents account enumeration attacks.
+    const genericMessage = 'If this email is registered, a verification code has been sent. Please check your inbox.';
+
     if (rows.length === 0) {
-      return res.redirect('/auth/login?tab=otp&error=' + encodeURIComponent('No account found with this email.'));
+      // Email not found — show generic success (do NOT reveal that email doesn't exist)
+      return res.render('otp-verify', {
+        layout: 'layout',
+        title: 'Verify Code',
+        email: normalizedEmail,
+        error: null,
+        info: genericMessage
+      });
     }
 
     const user = rows[0];
 
     if (!user.IsActive) {
-      return res.redirect('/auth/login?tab=otp&error=' + encodeURIComponent('Your account has been deactivated.'));
+      // Deactivated account — still show generic success (do NOT reveal account status)
+      return res.render('otp-verify', {
+        layout: 'layout',
+        title: 'Verify Code',
+        email: normalizedEmail,
+        error: null,
+        info: genericMessage
+      });
     }
 
     // Generate OTP (6 digits, expires in 5 minutes)
@@ -174,17 +247,18 @@ router.post('/otp-request', async (req, res) => {
     const sent = await sendOTP(user.Email, code);
 
     if (!sent) {
-      return res.redirect('/auth/login?tab=otp&error=' + encodeURIComponent('Failed to send OTP. Check SMTP configuration.'));
+      return res.redirect('/auth/login?tab=otp&error=' + encodeURIComponent('Failed to send verification code. Please try again later.'));
     }
 
     await logAudit({ userId: user.Id, action: 'OTP_SENT', ipAddress: getClientIP(req), details: `OTP sent to: ${email}` });
 
-    // Render OTP verification page
+    // Render OTP verification page with generic message
     res.render('otp-verify', {
       layout: 'layout',
       title: 'Verify Code',
       email: user.Email,
-      error: null
+      error: null,
+      info: genericMessage
     });
   } catch (err) {
     console.error('[AUTH] OTP request error:', err.message);
@@ -204,7 +278,8 @@ router.post('/otp-verify', async (req, res) => {
         layout: 'layout',
         title: 'Verify Code',
         email: email || '',
-        error: 'Please enter the verification code.'
+        error: 'Please enter the verification code.',
+        info: null
       });
     }
 
@@ -216,7 +291,7 @@ router.post('/otp-verify', async (req, res) => {
 
     if (rows.length === 0) {
       return res.render('otp-verify', {
-        layout: 'layout', title: 'Verify Code', email, error: 'Invalid request.'
+        layout: 'layout', title: 'Verify Code', email, error: 'Invalid verification code. Please try again.', info: null
       });
     }
 
@@ -224,7 +299,7 @@ router.post('/otp-verify', async (req, res) => {
 
     if (!user.IsActive) {
       return res.render('otp-verify', {
-        layout: 'layout', title: 'Verify Code', email, error: 'Your account has been deactivated.'
+        layout: 'layout', title: 'Verify Code', email, error: 'Your account has been deactivated.', info: null
       });
     }
 
@@ -232,14 +307,14 @@ router.post('/otp-verify', async (req, res) => {
     if (!user.OTPCode || user.OTPCode !== code.trim()) {
       await logAudit({ userId: user.Id, action: 'OTP_FAILED', ipAddress: getClientIP(req), details: `Invalid OTP for: ${email}` });
       return res.render('otp-verify', {
-        layout: 'layout', title: 'Verify Code', email, error: 'Invalid verification code. Please try again.'
+        layout: 'layout', title: 'Verify Code', email, error: 'Invalid verification code. Please try again.', info: null
       });
     }
 
     // Check expiry
     if (user.OTPExpiresAt && new Date(user.OTPExpiresAt) < new Date()) {
       return res.render('otp-verify', {
-        layout: 'layout', title: 'Verify Code', email, error: 'Code has expired. Please request a new one.'
+        layout: 'layout', title: 'Verify Code', email, error: 'Code has expired. Please request a new one.', info: null
       });
     }
 
@@ -254,7 +329,7 @@ router.post('/otp-verify', async (req, res) => {
       if (err) {
         console.error('[AUTH] OTP login error:', err);
         return res.render('otp-verify', {
-          layout: 'layout', title: 'Verify Code', email, error: 'Login failed.'
+          layout: 'layout', title: 'Verify Code', email, error: 'Login failed.', info: null
         });
       }
 
@@ -268,7 +343,233 @@ router.post('/otp-verify', async (req, res) => {
   } catch (err) {
     console.error('[AUTH] OTP verify error:', err.message);
     res.render('otp-verify', {
-      layout: 'layout', title: 'Verify Code', email: req.body.email || '', error: 'An error occurred.'
+      layout: 'layout', title: 'Verify Code', email: req.body.email || '', error: 'An error occurred.', info: null
+    });
+  }
+});
+
+// =====================================================
+// FORGOT PASSWORD / RESET PASSWORD
+// =====================================================
+
+/**
+ * GET /auth/forgot-password — Display forgot password form
+ */
+router.get('/forgot-password', (req, res) => {
+  res.render('forgot-password', {
+    layout: 'layout',
+    title: 'Forgot Password',
+    error: req.query.error || null,
+    success: req.query.success || null
+  });
+});
+
+/**
+ * POST /auth/forgot-password — Send password reset link
+ * Uses OWASP-compliant generic response + hashed token storage.
+ */
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.render('forgot-password', {
+        layout: 'layout',
+        title: 'Forgot Password',
+        error: 'Email is required.',
+        success: null
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Rate limiting check
+    if (isRateLimited(normalizedEmail, 'forgot-password')) {
+      return res.render('forgot-password', {
+        layout: 'layout',
+        title: 'Forgot Password',
+        error: 'Too many requests. Please try again later.',
+        success: null
+      });
+    }
+
+    // OWASP: Always show the same generic message regardless of outcome
+    const genericMessage = 'If this email is registered, a password reset link has been sent. Please check your inbox.';
+
+    // Find user
+    const rows = await db.queryRows(
+      'SELECT Id, Email, IsActive FROM Users WHERE Email = @p0',
+      [normalizedEmail]
+    );
+
+    if (rows.length === 0 || !rows[0].IsActive) {
+      // User not found or inactive — still show generic success
+      return res.render('forgot-password', {
+        layout: 'layout',
+        title: 'Forgot Password',
+        error: null,
+        success: genericMessage
+      });
+    }
+
+    const user = rows[0];
+
+    // Generate a cryptographically secure reset token (64 hex chars = 32 bytes)
+    const rawToken = crypto.randomBytes(32).toString('hex');
+
+    // Store SHA-256 hash of the token in DB (never store raw token)
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Overwrite any prior reset token (only latest is valid — OWASP)
+    await db.query(
+      'UPDATE Users SET ResetTokenHash = @p0, ResetTokenExpiresAt = @p1 WHERE Id = @p2',
+      [tokenHash, expiresAt.toISOString(), user.Id]
+    );
+
+    // Build reset URL
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${rawToken}`;
+
+    // Send reset email
+    const sent = await sendPasswordReset(user.Email, resetUrl);
+
+    if (!sent) {
+      console.error('[AUTH] Failed to send password reset email to:', user.Email);
+      // Still show generic success to prevent enumeration
+    }
+
+    await logAudit({ userId: user.Id, action: 'PASSWORD_RESET_REQUESTED', ipAddress: getClientIP(req), details: `Password reset requested for: ${user.Email}` });
+
+    res.render('forgot-password', {
+      layout: 'layout',
+      title: 'Forgot Password',
+      error: null,
+      success: genericMessage
+    });
+  } catch (err) {
+    console.error('[AUTH] Forgot password error:', err.message);
+    res.render('forgot-password', {
+      layout: 'layout',
+      title: 'Forgot Password',
+      error: 'An error occurred. Please try again.',
+      success: null
+    });
+  }
+});
+
+/**
+ * GET /auth/reset-password — Display reset password form (validates token)
+ */
+router.get('/reset-password', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Invalid or missing reset link.'));
+    }
+
+    // Hash the provided token and look it up
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const rows = await db.queryRows(
+      'SELECT Id, ResetTokenExpiresAt FROM Users WHERE ResetTokenHash = @p0',
+      [tokenHash]
+    );
+
+    if (rows.length === 0) {
+      return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Invalid or expired reset link. Please request a new one.'));
+    }
+
+    // Check expiry
+    if (rows[0].ResetTokenExpiresAt && new Date(rows[0].ResetTokenExpiresAt) < new Date()) {
+      // Clear expired token
+      await db.query('UPDATE Users SET ResetTokenHash = NULL, ResetTokenExpiresAt = NULL WHERE Id = @p0', [rows[0].Id]);
+      return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Reset link has expired. Please request a new one.'));
+    }
+
+    // Token valid — show reset form
+    res.render('reset-password', {
+      layout: 'layout',
+      title: 'Reset Password',
+      token,
+      error: null
+    });
+  } catch (err) {
+    console.error('[AUTH] Reset password page error:', err.message);
+    res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('An error occurred.'));
+  }
+});
+
+/**
+ * POST /auth/reset-password — Process password reset
+ */
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token) {
+      return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Invalid or missing reset token.'));
+    }
+
+    // Validate password
+    if (!password || password.length < 8) {
+      return res.render('reset-password', {
+        layout: 'layout',
+        title: 'Reset Password',
+        token,
+        error: 'Password must be at least 8 characters.'
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render('reset-password', {
+        layout: 'layout',
+        title: 'Reset Password',
+        token,
+        error: 'Passwords do not match.'
+      });
+    }
+
+    // Hash the provided token and look it up
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const rows = await db.queryRows(
+      'SELECT Id, Email, ResetTokenExpiresAt FROM Users WHERE ResetTokenHash = @p0',
+      [tokenHash]
+    );
+
+    if (rows.length === 0) {
+      return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Invalid or expired reset link. Please request a new one.'));
+    }
+
+    const user = rows[0];
+
+    // Check expiry
+    if (user.ResetTokenExpiresAt && new Date(user.ResetTokenExpiresAt) < new Date()) {
+      await db.query('UPDATE Users SET ResetTokenHash = NULL, ResetTokenExpiresAt = NULL WHERE Id = @p0', [user.Id]);
+      return res.redirect('/auth/login?tab=password&error=' + encodeURIComponent('Reset link has expired. Please request a new one.'));
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Update password, clear reset token (single-use — OWASP), update last login
+    await db.query(
+      'UPDATE Users SET PasswordHash = @p0, ResetTokenHash = NULL, ResetTokenExpiresAt = NULL, LastLoginAt = GETDATE() WHERE Id = @p1',
+      [passwordHash, user.Id]
+    );
+
+    await logAudit({ userId: user.Id, action: 'PASSWORD_RESET_COMPLETED', ipAddress: getClientIP(req), details: `Password reset completed for: ${user.Email}` });
+
+    res.redirect('/auth/login?tab=password&success=' + encodeURIComponent('Password has been reset successfully. You can now sign in with your new password.'));
+  } catch (err) {
+    console.error('[AUTH] Reset password error:', err.message);
+    res.render('reset-password', {
+      layout: 'layout',
+      title: 'Reset Password',
+      token: req.body.token || '',
+      error: 'An error occurred. Please try again.'
     });
   }
 });
