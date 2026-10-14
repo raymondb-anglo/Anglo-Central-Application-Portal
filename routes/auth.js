@@ -427,8 +427,9 @@ router.post('/forgot-password', async (req, res) => {
       [tokenHash, expiresAt.toISOString(), user.Id]
     );
 
-    // Build reset URL
-    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+    // Build reset URL dynamically from the actual request (works in all environments)
+    // req.protocol respects X-Forwarded-Proto via 'trust proxy' in server.js
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const resetUrl = `${baseUrl}/auth/reset-password?token=${rawToken}`;
 
     // Send reset email
