@@ -104,8 +104,65 @@ For complete production deployment instructions including IIS reverse proxy and 
 - [x] Phase 4 — Google Authentication (OAuth + dev bypass)
 - [x] Phase 5 — Users, Roles & Permissions (RBAC, admin pages)
 - [x] Phase 6 — Portal Dashboard (permission-filtered, tracked launches)
-- [ ] Phase 7 — PGJ Pilot Integration (SSO token passing)
+- [x] Phase 7 — SSO Token Passing (JWT-based, auto-generated for all apps)
 - [ ] Phase 8 — Remaining Applications (CCA, PTM, Booking, Meet)
+
+## SSO (Single Sign-On) — JWT Token Passing
+
+When a user clicks an application card on the Portal dashboard, the Portal
+automatically generates a signed JWT token and appends it to the redirect URL:
+
+```
+https://materialrequest64.anglosingapore.ac.th/?sso_token=eyJhbGciOi...
+```
+
+### JWT Payload
+
+```json
+{
+  "sub": "raymond.b@anglosingapore.ac.th",
+  "email": "raymond.b@anglosingapore.ac.th",
+  "name": "Raymond Bastasa",
+  "given_name": "Raymond",
+  "family_name": "Bastasa",
+  "picture": "https://lh3.googleusercontent.com/...",
+  "app_code": "MaterialRequisition",
+  "app_name": "Material Requisition",
+  "iss": "anglo-central-portal",
+  "aud": "MaterialRequisition",
+  "iat": 1729000000,
+  "exp": 1729000300
+}
+```
+
+### Token Properties
+
+| Property | Value |
+|----------|-------|
+| Algorithm | HS256 (HMAC-SHA256) |
+| TTL | 5 minutes |
+| Issuer | `anglo-central-portal` |
+| Audience | Application Code |
+| Secret | `SSO_JWT_SECRET` (shared between Portal & target app) |
+
+### How External Apps Consume the Token
+
+**Option A — Remote verification (recommended):**
+```
+POST https://apps.anglosingapore.ac.th/api/sso/verify
+Body: { "token": "<JWT>", "app_code": "MaterialRequisition" }
+```
+
+**Option B — Local verification:**
+Validate the JWT locally using the shared `SSO_JWT_SECRET` with the `HS256` algorithm.
+
+### SSO Info Endpoint
+
+```
+GET https://apps.anglosingapore.ac.th/api/sso/info
+```
+
+Returns SSO configuration details (algorithm, TTL, verify endpoint URL).
 
 ## Admin Features
 

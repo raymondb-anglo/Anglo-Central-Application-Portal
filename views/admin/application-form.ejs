@@ -156,13 +156,9 @@
           </div>
 
           <div class="col-md-6">
-            <div class="form-check-container">
-              <label class="form-label d-block">SSO</label>
-              <div class="form-check form-switch mt-2">
-                <input class="form-check-input" type="checkbox" id="requiresSSO" name="requiresSSO"
-                       <%= application && (application.requiresSSO || application.RequiresSSO) ? 'checked' : '' %>>
-                <label class="form-check-label" for="requiresSSO">Requires SSO</label>
-              </div>
+            <div class="form-text-container mt-4">
+              <i class="bi bi-shield-lock text-success me-1"></i>
+              <span class="form-text">SSO tokens are automatically issued for all applications when users launch from the Portal.</span>
             </div>
           </div>
         </div>

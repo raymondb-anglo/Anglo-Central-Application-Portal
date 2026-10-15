@@ -12,7 +12,7 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
   try {
     const applications = await db.queryRows(
       `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
-              DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO,
+              DatabaseType, Technology, Name, Icon, DisplayOrder, Status,
               CreatedAt, UpdatedAt
        FROM ApplicationInformation
        ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
@@ -87,7 +87,7 @@ router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req,
   try {
     const {
       applicationCode, application, campus, link, description,
-      databaseType, technology, name, icon, displayOrder, status, requiresSSO
+      databaseType, technology, name, icon, displayOrder, status
     } = req.body;
 
     // Validation
@@ -104,8 +104,8 @@ router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req,
 
     await db.query(
       `INSERT INTO ApplicationInformation
-       (ApplicationCode, Application, Campus, Link, Description, DatabaseType, Technology, Name, Icon, DisplayOrder, Status, RequiresSSO, CreatedAt, UpdatedAt)
-       VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, GETDATE(), GETDATE())`,
+       (ApplicationCode, Application, Campus, Link, Description, DatabaseType, Technology, Name, Icon, DisplayOrder, Status, CreatedAt, UpdatedAt)
+       VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, GETDATE(), GETDATE())`,
       [
         applicationCode.trim(),
         application.trim(),
@@ -117,8 +117,7 @@ router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req,
         name?.trim() || null,
         icon?.trim() || null,
         parseInt(displayOrder, 10) || 0,
-        status || 'Active',
-        requiresSSO === 'on' || requiresSSO === '1' ? 1 : 0
+        status || 'Active'
       ]
     );
 
@@ -155,7 +154,7 @@ router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (r
   try {
     const {
       applicationCode, application, campus, link, description,
-      databaseType, technology, name, icon, displayOrder, status, requiresSSO
+      databaseType, technology, name, icon, displayOrder, status
     } = req.body;
 
     if (!applicationCode || !application || !link) {
@@ -173,9 +172,9 @@ router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (r
       `UPDATE ApplicationInformation SET
          ApplicationCode = @p0, Application = @p1, Campus = @p2, Link = @p3,
          Description = @p4, DatabaseType = @p5, Technology = @p6, Name = @p7,
-         Icon = @p8, DisplayOrder = @p9, Status = @p10, RequiresSSO = @p11,
+         Icon = @p8, DisplayOrder = @p9, Status = @p10,
          UpdatedAt = GETDATE()
-       WHERE Id = @p12`,
+       WHERE Id = @p11`,
       [
         applicationCode.trim(),
         application.trim(),
@@ -188,7 +187,6 @@ router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (r
         icon?.trim() || null,
         parseInt(displayOrder, 10) || 0,
         status || 'Active',
-        requiresSSO === 'on' || requiresSSO === '1' ? 1 : 0,
         id
       ]
     );

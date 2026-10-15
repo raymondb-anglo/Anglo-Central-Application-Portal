@@ -17,6 +17,8 @@ import adminApplicationsRoutes from './routes/admin/applications.js';
 import adminUsersRoutes from './routes/admin/users.js';
 import adminRolesRoutes from './routes/admin/roles.js';
 import adminAuditLogsRoutes from './routes/admin/auditLogs.js';
+import ssoApiRoutes from './routes/api/sso.js';
+import { isSSOConfigured } from './utils/sso.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -87,6 +89,7 @@ app.use('/admin/applications', adminApplicationsRoutes);
 app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/roles', adminRolesRoutes);
 app.use('/admin/audit-logs', adminAuditLogsRoutes);
+app.use('/api/sso', ssoApiRoutes);
 
 // ---- Health check ----
 app.get('/health', async (req, res) => {
@@ -147,6 +150,7 @@ const port = parseInt(process.env.PORT || '3000', 10);
     console.log(`  ║   Running on http://localhost:${port}              ║`);
     console.log(`  ║   Environment: ${(process.env.NODE_ENV || 'development').padEnd(30)}║`);
     console.log(`  ║   Database: ${(dbConnected ? 'Connected' : 'Not connected').padEnd(33)}║`);
+    console.log(`  ║   SSO: ${(isSSOConfigured() ? 'Enabled (JWT)' : 'Not configured').padEnd(38)}║`);
     console.log('  ╚═══════════════════════════════════════════════╝');
     console.log('');
   });
