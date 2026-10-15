@@ -1138,6 +1138,23 @@ small.text-muted,
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-header-text {
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .admin-title {
@@ -1447,21 +1464,24 @@ small.text-muted,
 .action-btns {
   display: flex;
   gap: 0.375rem;
+  align-items: center;
 }
 
 .btn-action {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--bg-surface-raised);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .btn-action:hover {
@@ -1808,41 +1828,324 @@ small.text-muted,
 }
 
 /* =====================================================
-   RESPONSIVE
+   RESPONSIVE DESIGN SYSTEM
+   Mobile (iPhone 16, Samsung Galaxy), Foldables, Tablets & Desktop
    ===================================================== */
+
+/* ---- Tablets & Below (< 992px) ---- */
+@media (max-width: 991.98px) {
+  /* Navbar Collapse Menu */
+  .portal-navbar .navbar-collapse {
+    background: var(--bg-surface);
+    margin: 0.75rem -0.75rem -0.5rem;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .portal-navbar .navbar-nav {
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+
+  .portal-navbar .nav-item {
+    width: 100%;
+  }
+
+  .portal-navbar .nav-link {
+    padding: 0.625rem 0.875rem !important;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+  }
+
+  .portal-navbar .nav-link:hover,
+  .portal-navbar .nav-link:focus {
+    background: var(--bg-surface-hover);
+  }
+
+  /* Inline mobile dropdown menu for Admin and User Profile */
+  .portal-navbar .dropdown-menu {
+    position: static !important;
+    float: none !important;
+    transform: none !important;
+    width: 100% !important;
+    background: var(--bg-surface-raised) !important;
+    border: 1px solid var(--border-color) !important;
+    margin-top: 0.375rem !important;
+    padding: 0.5rem !important;
+    box-shadow: none !important;
+  }
+
+  .portal-navbar .dropdown-item {
+    padding: 0.5rem 0.75rem !important;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+  }
+
+  .portal-navbar .theme-toggle-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+    margin-top: 0.25rem;
+  }
+}
+
+/* ---- Small Tablets & Mobile Devices (< 768px) ---- */
 @media (max-width: 768px) {
+  /* Dashboard Header */
+  .dashboard-header {
+    padding: 1.25rem 0;
+  }
+
   .welcome-title {
     font-size: var(--font-size-xl);
   }
 
+  /* Dashboard Filter Bar & Tabs */
+  .app-filter-bar {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .filter-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    width: 100%;
+  }
+
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-tab {
+    white-space: nowrap;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+  }
+
+  /* Dashboard App Grid */
   .app-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .app-card {
+    padding: 1rem 1.25rem;
+  }
+
+  /* Admin Pages Layout */
+  .admin-page {
+    padding: 1.25rem 0;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  /* Admin Action Buttons (Download, Bulk Import, Add User) */
+  .admin-header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-header-actions .btn {
+    flex: 1 1 calc(50% - 0.25rem);
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  /* Primary action button (e.g. Add User) takes full prominent width at the top */
+  .admin-header-actions .btn-primary-portal {
+    flex: 1 1 100%;
+    order: -1;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Admin Stats — sleek 3-column / 2-column card row */
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* Table Responsiveness & Touch Targets */
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+  }
+
+  .admin-table th,
+  .admin-table td {
+    white-space: nowrap;
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  /* Touch-friendly Action Buttons (min 40x40px for mobile touch) */
+  .action-btns {
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .btn-action {
+    min-width: 40px;
+    min-height: 40px;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  /* Forms on Mobile */
+  .form-section {
+    padding: 1.25rem;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .checkbox-grid {
     grid-template-columns: 1fr;
   }
 
+  /* Auth & Login Card */
   .login-container {
     padding: 1rem;
   }
 
   .login-card {
-    padding: 1.75rem;
-  }
-
-  .dashboard-header {
-    padding: 1.5rem 0;
-  }
-
-  .portal-navbar .collapse {
-    background: var(--bg-surface);
-    margin: 0.5rem -0.75rem -0.5rem;
-    padding: 0.75rem;
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-    border: 1px solid var(--border-color);
-    border-top: none;
+    padding: 1.75rem 1.5rem;
   }
 }
 
-@media (max-width: 480px) {
+/* ---- Compact Mobile: iPhone 16, Samsung Galaxy (< 576px) ---- */
+@media (max-width: 576px) {
+  /* Brand text: hide subtitle but keep brand name Anglo */
+  .brand-subtitle {
+    display: none;
+  }
+
+  .admin-title {
+    font-size: 1.25rem;
+  }
+
+  .admin-subtitle {
+    font-size: 0.85rem;
+  }
+
+  /* On phones <= 576px: Admin buttons stack full-width for effortless thumb tapping */
+  .admin-header-actions .btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  /* Stats cards: 2 or 3 columns depending on number */
+  .admin-stats {
+    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  }
+
+  /* Modals: full touch adaptation */
+  .modal-dialog {
+    margin: 0.75rem auto;
+    max-width: calc(100% - 1.5rem);
+  }
+
+  .modal-content {
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+    margin: 0 !important;
+    padding: 0.75rem;
+  }
+
+  /* Role cards grid */
+  .role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Pagination navigation */
+  .pagination-nav {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pagination-nav .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---- Extra Small Screens & Foldables Cover (< 360px) ---- */
+@media (max-width: 360px) {
   .brand-text {
     display: none;
+  }
+
+  .login-card {
+    padding: 1.25rem 0.875rem;
+    border-radius: var(--radius-md);
+  }
+
+  .login-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.35rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .login-title {
+    font-size: 1.15rem;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr;
   }
 }

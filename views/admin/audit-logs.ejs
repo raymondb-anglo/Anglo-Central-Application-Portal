@@ -1,8 +1,10 @@
 <div class="admin-page">
   <div class="container">
     <div class="admin-header">
-      <h1 class="admin-title"><i class="bi bi-journal-text me-2"></i>Audit Logs</h1>
-      <p class="admin-subtitle">System activity and audit trail — <%= total %> total entries</p>
+      <div class="admin-header-text">
+        <h1 class="admin-title"><i class="bi bi-journal-text me-2"></i>Audit Logs</h1>
+        <p class="admin-subtitle">System activity and audit trail — <%= total %> total entries</p>
+      </div>
     </div>
 
     <% if (typeof error !== 'undefined' && error) { %>

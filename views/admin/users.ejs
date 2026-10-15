@@ -1,19 +1,19 @@
 <div class="admin-page">
   <div class="container">
-    <div class="admin-header d-flex justify-content-between align-items-start flex-wrap gap-3">
-      <div>
+    <div class="admin-header">
+      <div class="admin-header-text">
         <h1 class="admin-title"><i class="bi bi-people me-2"></i>User Management</h1>
         <p class="admin-subtitle">Manage portal users, roles, and application access.</p>
       </div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="/admin/users/template" class="btn btn-secondary-portal" title="Download sample CSV template">
-          <i class="bi bi-download me-1"></i> Download Template
+      <div class="admin-header-actions">
+        <a href="/admin/users/new" class="btn btn-primary-portal">
+          <i class="bi bi-person-plus me-1"></i> Add User
         </a>
         <button type="button" class="btn btn-secondary-portal" data-bs-toggle="modal" data-bs-target="#importUsersModal">
           <i class="bi bi-file-earmark-arrow-up me-1"></i> Bulk Import (CSV)
         </button>
-        <a href="/admin/users/new" class="btn btn-primary-portal">
-          <i class="bi bi-person-plus me-1"></i> Add User
+        <a href="/admin/users/template" class="btn btn-secondary-portal" title="Download sample CSV template">
+          <i class="bi bi-download me-1"></i> Download Template
         </a>
       </div>
     </div>
