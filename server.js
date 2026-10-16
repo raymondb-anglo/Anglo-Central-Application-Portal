@@ -2,12 +2,13 @@ import 'dotenv/config';
 import express from 'express';
 import expressLayouts from 'express-ejs-layouts';
 import session from 'express-session';
+import MSSQLStore from 'connect-mssql-v2';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import passport, { configurePassport } from './config/passport.js';
-import { testConnection } from './db.js';
+import { testConnection, config as dbConfig } from './db.js';
 import { attachUserToLocals, loadUserRoles } from './middleware/auth.js';
 
 // Routes
@@ -53,7 +54,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // ---- Session ----
-app.use(session({
+// Use MSSQL-backed session store so sessions persist across PM2 restarts.
+// Falls back to in-memory MemoryStore if database is not configured.
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'anglo-portal-dev-secret-change-me',
   resave: false,
   saveUninitialized: false,
@@ -62,7 +65,21 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
-}));
+};
+
+if (dbConfig.user && dbConfig.database) {
+  sessionConfig.store = new MSSQLStore(dbConfig, {
+    table: 'sessions',
+    autoRemove: true,           // Automatically purge expired sessions
+    autoRemoveInterval: 600000  // Clean up every 10 minutes (ms)
+  });
+  console.log('[SESSION] Using MSSQL session store (table: sessions)');
+} else {
+  console.warn('[SESSION] Database not configured — using in-memory session store.');
+  console.warn('[SESSION] Sessions will NOT persist across server restarts.');
+}
+
+app.use(session(sessionConfig));
 
 // ---- Passport ----
 configurePassport();
@@ -150,6 +167,7 @@ const port = parseInt(process.env.PORT || '3000', 10);
     console.log(`  ║   Running on http://localhost:${port}              ║`);
     console.log(`  ║   Environment: ${(process.env.NODE_ENV || 'development').padEnd(30)}║`);
     console.log(`  ║   Database: ${(dbConnected ? 'Connected' : 'Not connected').padEnd(33)}║`);
+    console.log(`  ║   Sessions: ${(sessionConfig.store ? 'MSSQL (persistent)' : 'Memory (volatile)').padEnd(32)}║`);
     console.log(`  ║   SSO: ${(isSSOConfigured() ? 'Enabled (JWT)' : 'Not configured').padEnd(38)}║`);
     console.log('  ╚═══════════════════════════════════════════════╝');
     console.log('');

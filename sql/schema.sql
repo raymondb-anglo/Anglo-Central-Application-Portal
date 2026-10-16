@@ -109,3 +109,14 @@ CREATE TABLE AuditLogs (
 CREATE INDEX IX_AuditLogs_UserId ON AuditLogs(UserId);
 CREATE INDEX IX_AuditLogs_Timestamp ON AuditLogs(Timestamp);
 CREATE INDEX IX_AuditLogs_Action ON AuditLogs(Action);
+
+-- =====================================================
+-- 8. Sessions (MSSQL-backed session store for Express)
+--    Used by connect-mssql-v2 to persist user sessions
+--    across PM2 restarts and server reboots.
+-- =====================================================
+CREATE TABLE [dbo].[sessions](
+    [sid]     [nvarchar](255)  NOT NULL PRIMARY KEY,
+    [session] [nvarchar](max)  NOT NULL,
+    [expires] [datetime]       NOT NULL
+);

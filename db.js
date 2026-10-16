@@ -106,5 +106,5 @@ export async function testConnection() {
   }
 }
 
-export { sql };
-export default { query, queryRows, getTransaction, testConnection, sql };
+export { sql, config };
+export default { query, queryRows, getTransaction, testConnection, sql, config };
