@@ -20,18 +20,22 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
     const total = countResult[0]?.Total || 0;
     const totalPages = Math.ceil(total / limit);
 
-    // Get logs with user info
+    // Get logs with user info (ROW_NUMBER CTE for SQL Server 2008 R2+ compatibility)
     const logs = await db.queryRows(
-      `SELECT TOP ${limit} al.Id, al.Action, al.Timestamp, al.IPAddress, al.Details,
-              u.Email AS UserEmail, u.DisplayName AS UserName,
-              ai.Application AS AppName
-       FROM AuditLogs al
-       LEFT JOIN Users u ON u.Id = al.UserId
-       LEFT JOIN ApplicationInformation ai ON ai.Id = al.ApplicationId
-       WHERE al.Id NOT IN (
-         SELECT TOP ${offset} Id FROM AuditLogs ORDER BY Timestamp DESC
+      `WITH PagedLogs AS (
+         SELECT ROW_NUMBER() OVER (ORDER BY al.Timestamp DESC) AS RowNum,
+                al.Id, al.Action, al.Timestamp, al.IPAddress, al.Details,
+                u.Email AS UserEmail, u.DisplayName AS UserName,
+                ai.Application AS AppName
+         FROM AuditLogs al
+         LEFT JOIN Users u ON u.Id = al.UserId
+         LEFT JOIN ApplicationInformation ai ON ai.Id = al.ApplicationId
        )
-       ORDER BY al.Timestamp DESC`
+       SELECT Id, Action, Timestamp, IPAddress, Details, UserEmail, UserName, AppName
+       FROM PagedLogs
+       WHERE RowNum > @p0 AND RowNum <= (@p0 + @p1)
+       ORDER BY RowNum`,
+      [offset, limit]
     );
 
     res.render('admin/audit-logs', {

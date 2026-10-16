@@ -28,14 +28,21 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
     const total = stats.Total;
     const totalPages = Math.ceil(total / limit);
 
-    // Paginated applications
+    // Paginated applications (ROW_NUMBER CTE for SQL Server 2008 R2+ compatibility)
     const applications = await db.queryRows(
-      `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
+      `WITH PagedApplications AS (
+         SELECT ROW_NUMBER() OVER (ORDER BY DisplayOrder ASC, Application ASC, Campus ASC) AS RowNum,
+                Id, ApplicationCode, Application, Campus, Link, Description,
+                DatabaseType, Technology, Name, Icon, DisplayOrder, Status,
+                CreatedAt, UpdatedAt
+         FROM ApplicationInformation
+       )
+       SELECT Id, ApplicationCode, Application, Campus, Link, Description,
               DatabaseType, Technology, Name, Icon, DisplayOrder, Status,
               CreatedAt, UpdatedAt
-       FROM ApplicationInformation
-       ORDER BY DisplayOrder ASC, Application ASC, Campus ASC
-       OFFSET @p0 ROWS FETCH NEXT @p1 ROWS ONLY`,
+       FROM PagedApplications
+       WHERE RowNum > @p0 AND RowNum <= (@p0 + @p1)
+       ORDER BY RowNum`,
       [offset, limit]
     );
 

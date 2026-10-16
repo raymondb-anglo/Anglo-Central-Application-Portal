@@ -207,16 +207,21 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
     const total = stats.Total;
     const totalPages = Math.ceil(total / limit);
 
-    // Paginated users
+    // Paginated users (ROW_NUMBER CTE for SQL Server 2008 R2+ compatibility)
     const users = await db.queryRows(
-      `SELECT u.Id, u.Email, u.DisplayName, u.FirstName, u.LastName, u.IsActive, u.CreatedAt, u.LastLoginAt,
-              STUFF((SELECT ', ' + r.Name FROM Roles r 
-                     INNER JOIN UserRoles ur ON ur.RoleId = r.Id 
-                     WHERE ur.UserId = u.Id 
-                     FOR XML PATH('')), 1, 2, '') AS RoleNames
-       FROM Users u
-       ORDER BY u.DisplayName ASC
-       OFFSET @p0 ROWS FETCH NEXT @p1 ROWS ONLY`,
+      `WITH PagedUsers AS (
+         SELECT ROW_NUMBER() OVER (ORDER BY u.DisplayName ASC) AS RowNum,
+                u.Id, u.Email, u.DisplayName, u.FirstName, u.LastName, u.IsActive, u.CreatedAt, u.LastLoginAt,
+                STUFF((SELECT ', ' + r.Name FROM Roles r 
+                       INNER JOIN UserRoles ur ON ur.RoleId = r.Id 
+                       WHERE ur.UserId = u.Id 
+                       FOR XML PATH('')), 1, 2, '') AS RoleNames
+         FROM Users u
+       )
+       SELECT Id, Email, DisplayName, FirstName, LastName, IsActive, CreatedAt, LastLoginAt, RoleNames
+       FROM PagedUsers
+       WHERE RowNum > @p0 AND RowNum <= (@p0 + @p1)
+       ORDER BY RowNum`,
       [offset, limit]
     );
 
