@@ -26,12 +26,12 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
          SELECT ROW_NUMBER() OVER (ORDER BY al.Timestamp DESC) AS RowNum,
                 al.Id, al.Action, al.Timestamp, al.IPAddress, al.Details,
                 u.Email AS UserEmail, u.DisplayName AS UserName,
-                ai.Application AS AppName
+                ai.Application AS AppName, ai.Campus AS AppCampus
          FROM AuditLogs al
          LEFT JOIN Users u ON u.Id = al.UserId
          LEFT JOIN ApplicationInformation ai ON ai.Id = al.ApplicationId
        )
-       SELECT Id, Action, Timestamp, IPAddress, Details, UserEmail, UserName, AppName
+       SELECT Id, Action, Timestamp, IPAddress, Details, UserEmail, UserName, AppName, AppCampus
        FROM PagedLogs
        WHERE RowNum > @p0 AND RowNum <= (@p0 + @p1)
        ORDER BY RowNum`,

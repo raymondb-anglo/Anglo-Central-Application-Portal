@@ -137,7 +137,7 @@ router.get('/launch/:id', requireAuth, async (req, res) => {
   try {
     const appId = parseInt(req.params.id, 10);
     const rows = await db.queryRows(
-      'SELECT Id, ApplicationCode, Application, Link FROM ApplicationInformation WHERE Id = @p0 AND Status = @p1',
+      'SELECT Id, ApplicationCode, Application, Campus, Link FROM ApplicationInformation WHERE Id = @p0 AND Status = @p1',
       [appId, 'Active']
     );
 
@@ -153,7 +153,7 @@ router.get('/launch/:id', requireAuth, async (req, res) => {
       action: 'APP_ACCESS',
       applicationId: appId,
       ipAddress: getClientIP(req),
-      details: `Accessed: ${app.Application}`
+      details: `Accessed: ${app.Application}${app.Campus ? ' — ' + app.Campus : ''}`
     });
 
     // Generate SSO token and append to redirect URL

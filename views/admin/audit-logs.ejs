@@ -36,7 +36,7 @@
                     <%= log.Action %>
                   </span>
                 </td>
-                <td><%= log.AppName || '—' %></td>
+                <td><%= log.AppName ? (log.AppName + (log.AppCampus ? ' — ' + log.AppCampus : '')) : '—' %></td>
                 <td class="small text-muted"><%= log.IPAddress || '—' %></td>
                 <td class="small" style="max-width: 250px;">
                   <span class="text-truncate d-inline-block" style="max-width: 250px;" title="<%= log.Details || '' %>">
