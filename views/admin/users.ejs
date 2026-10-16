@@ -27,9 +27,9 @@
 
     <% if (users && users.length > 0) { %>
       <div class="admin-stats">
-        <div class="stat-card"><div class="stat-value"><%= users.length %></div><div class="stat-label">Total Users</div></div>
-        <div class="stat-card"><div class="stat-value"><%= users.filter(u => u.IsActive).length %></div><div class="stat-label">Active</div></div>
-        <div class="stat-card"><div class="stat-value"><%= users.filter(u => !u.IsActive).length %></div><div class="stat-label">Inactive</div></div>
+        <div class="stat-card"><div class="stat-value"><%= total %></div><div class="stat-label">Total Users</div></div>
+        <div class="stat-card"><div class="stat-value"><%= stats.ActiveCount %></div><div class="stat-label">Active</div></div>
+        <div class="stat-card"><div class="stat-value"><%= stats.InactiveCount %></div><div class="stat-label">Inactive</div></div>
       </div>
 
       <div class="table-container">
@@ -86,6 +86,40 @@
             <% }) %>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination footer -->
+      <div class="table-pagination">
+        <div class="table-pagination-left">
+          <label for="users-rpp" class="pagination-rpp-label">Rows per page:</label>
+          <select id="users-rpp" class="pagination-rpp-select" data-base-url="/admin/users" aria-label="Rows per page">
+            <% allowedLimits.forEach(opt => { %>
+              <option value="<%= opt %>" <%= opt === limit ? 'selected' : '' %>><%= opt %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="table-pagination-right">
+          <span class="pagination-range">
+            <%= (page - 1) * limit + 1 %>–<%= Math.min(page * limit, total) %> of <%= total %>
+          </span>
+          <nav class="pagination-actions" aria-label="Table navigation">
+            <% if (page > 1) { %>
+              <a href="/admin/users?page=<%= page - 1 %>&limit=<%= limit %>" class="pagination-btn" aria-label="Previous page">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            <% } else { %>
+              <span class="pagination-btn disabled" aria-disabled="true"><i class="bi bi-chevron-left"></i></span>
+            <% } %>
+            <span class="pagination-info">Page <%= page %> of <%= totalPages %></span>
+            <% if (page < totalPages) { %>
+              <a href="/admin/users?page=<%= page + 1 %>&limit=<%= limit %>" class="pagination-btn" aria-label="Next page">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            <% } else { %>
+              <span class="pagination-btn disabled" aria-disabled="true"><i class="bi bi-chevron-right"></i></span>
+            <% } %>
+          </nav>
+        </div>
       </div>
     <% } else { %>
       <div class="empty-state">

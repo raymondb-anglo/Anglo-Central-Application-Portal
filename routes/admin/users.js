@@ -186,10 +186,28 @@ router.post('/import', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), uploa
 });
 
 /**
- * GET /admin/users — List portal users
+ * GET /admin/users — List portal users (paginated)
  */
 router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
   try {
+    const allowedLimits = [10, 20, 30, 40, 50];
+    const page = parseInt(req.query.page, 10) || 1;
+    const rawLimit = parseInt(req.query.limit, 10) || 20;
+    const limit = allowedLimits.includes(rawLimit) ? rawLimit : 20;
+    const offset = (page - 1) * limit;
+
+    // Total count + stats
+    const statsResult = await db.queryRows(
+      `SELECT COUNT(*) AS Total,
+              SUM(CASE WHEN IsActive = 1 THEN 1 ELSE 0 END) AS ActiveCount,
+              SUM(CASE WHEN IsActive = 0 THEN 1 ELSE 0 END) AS InactiveCount
+       FROM Users`
+    );
+    const stats = statsResult[0] || { Total: 0, ActiveCount: 0, InactiveCount: 0 };
+    const total = stats.Total;
+    const totalPages = Math.ceil(total / limit);
+
+    // Paginated users
     const users = await db.queryRows(
       `SELECT u.Id, u.Email, u.DisplayName, u.FirstName, u.LastName, u.IsActive, u.CreatedAt, u.LastLoginAt,
               STUFF((SELECT ', ' + r.Name FROM Roles r 
@@ -197,13 +215,21 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
                      WHERE ur.UserId = u.Id 
                      FOR XML PATH('')), 1, 2, '') AS RoleNames
        FROM Users u
-       ORDER BY u.DisplayName ASC`
+       ORDER BY u.DisplayName ASC
+       OFFSET @p0 ROWS FETCH NEXT @p1 ROWS ONLY`,
+      [offset, limit]
     );
 
     res.render('admin/users', {
       layout: 'layout',
       title: 'User Management',
       users,
+      stats,
+      page,
+      limit,
+      allowedLimits,
+      totalPages,
+      total,
       user: req.user,
       success: req.query.success || null,
       error: req.query.error || null
@@ -214,6 +240,12 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
       layout: 'layout',
       title: 'User Management',
       users: [],
+      stats: { Total: 0, ActiveCount: 0, InactiveCount: 0 },
+      page: 1,
+      limit: 20,
+      allowedLimits: [10, 20, 30, 40, 50],
+      totalPages: 0,
+      total: 0,
       user: req.user,
       error: 'Failed to load users: ' + err.message
     });

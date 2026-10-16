@@ -1915,6 +1915,126 @@ small.text-muted,
   color: var(--text-muted);
 }
 
+/* ---- Table Pagination Footer (Material Design style) ---- */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  gap: 1rem;
+}
+
+.table-pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-pagination-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Rows per page label */
+.pagination-rpp-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Rows per page select dropdown */
+.pagination-rpp-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-surface-hover);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%2394a3b8' d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 1.75rem 0.3rem 0.625rem;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 3.25rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pagination-rpp-select:hover {
+  border-color: var(--border-color-hover);
+}
+
+.pagination-rpp-select:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 1px;
+}
+
+.pagination-rpp-select:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Range indicator (e.g. "1-20 of 245") */
+.pagination-range {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Page nav actions container */
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Chevron navigation buttons */
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pagination-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.pagination-btn.disabled {
+  color: var(--text-muted);
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Light theme overrides */
+[data-theme="light"] .pagination-rpp-select {
+  background-color: #f8fafc;
+  color: #1e293b;
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .pagination-rpp-select:hover {
+  border-color: rgba(15, 23, 42, 0.3);
+}
+
+[data-theme="light"] .pagination-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
 /* =====================================================
    RESPONSIVE DESIGN SYSTEM
    Mobile (iPhone 16, Samsung Galaxy), Foldables, Tablets & Desktop
@@ -2208,6 +2328,24 @@ small.text-muted,
   .pagination-nav .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Table pagination footer */
+  .table-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .table-pagination-left {
+    justify-content: center;
+  }
+
+  .table-pagination-right {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 }
 

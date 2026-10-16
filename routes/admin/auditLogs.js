@@ -9,8 +9,10 @@ const router = Router();
  */
 router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
   try {
+    const allowedLimits = [10, 20, 30, 40, 50];
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = 50;
+    const rawLimit = parseInt(req.query.limit, 10) || 20;
+    const limit = allowedLimits.includes(rawLimit) ? rawLimit : 20;
     const offset = (page - 1) * limit;
 
     // Get total count
@@ -37,6 +39,8 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
       title: 'Audit Logs',
       logs,
       page,
+      limit,
+      allowedLimits,
       totalPages,
       total,
       user: req.user
@@ -48,6 +52,8 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
       title: 'Audit Logs',
       logs: [],
       page: 1,
+      limit: 20,
+      allowedLimits: [10, 20, 30, 40, 50],
       totalPages: 0,
       total: 0,
       user: req.user,

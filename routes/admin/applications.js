@@ -6,22 +6,49 @@ import db from '../../db.js';
 const router = Router();
 
 /**
- * GET /admin/applications — List all registered applications
+ * GET /admin/applications — List all registered applications (paginated)
  */
 router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
   try {
+    const allowedLimits = [10, 20, 30, 40, 50];
+    const page = parseInt(req.query.page, 10) || 1;
+    const rawLimit = parseInt(req.query.limit, 10) || 20;
+    const limit = allowedLimits.includes(rawLimit) ? rawLimit : 20;
+    const offset = (page - 1) * limit;
+
+    // Total count + stats
+    const statsResult = await db.queryRows(
+      `SELECT COUNT(*) AS Total,
+              SUM(CASE WHEN Status = 'Active' THEN 1 ELSE 0 END) AS ActiveCount,
+              SUM(CASE WHEN Status != 'Active' THEN 1 ELSE 0 END) AS InactiveCount,
+              COUNT(DISTINCT ApplicationCode) AS UniqueApps
+       FROM ApplicationInformation`
+    );
+    const stats = statsResult[0] || { Total: 0, ActiveCount: 0, InactiveCount: 0, UniqueApps: 0 };
+    const total = stats.Total;
+    const totalPages = Math.ceil(total / limit);
+
+    // Paginated applications
     const applications = await db.queryRows(
       `SELECT Id, ApplicationCode, Application, Campus, Link, Description,
               DatabaseType, Technology, Name, Icon, DisplayOrder, Status,
               CreatedAt, UpdatedAt
        FROM ApplicationInformation
-       ORDER BY DisplayOrder ASC, Application ASC, Campus ASC`
+       ORDER BY DisplayOrder ASC, Application ASC, Campus ASC
+       OFFSET @p0 ROWS FETCH NEXT @p1 ROWS ONLY`,
+      [offset, limit]
     );
 
     res.render('admin/applications', {
       layout: 'layout',
       title: 'Application Registry',
       applications,
+      stats,
+      page,
+      limit,
+      allowedLimits,
+      totalPages,
+      total,
       user: req.user,
       success: req.query.success || null,
       error: req.query.error || null
@@ -32,6 +59,12 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
       layout: 'layout',
       title: 'Application Registry',
       applications: [],
+      stats: { Total: 0, ActiveCount: 0, InactiveCount: 0, UniqueApps: 0 },
+      page: 1,
+      limit: 20,
+      allowedLimits: [10, 20, 30, 40, 50],
+      totalPages: 0,
+      total: 0,
       user: req.user,
       error: 'Failed to load applications: ' + err.message
     });
