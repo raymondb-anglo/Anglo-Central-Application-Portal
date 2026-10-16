@@ -107,6 +107,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---- Password Visibility Toggle (all password fields) ----
+  // Works on login, reset-password, and any future page that uses
+  // <button class="password-toggle-btn" data-target="<input-id>">
+  document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inputId = btn.getAttribute('data-target');
+      const input = document.getElementById(inputId);
+      if (!input) return;
+
+      const isHidden = input.type === 'password';
+
+      // Toggle input type
+      input.type = isHidden ? 'text' : 'password';
+
+      // Toggle icon: eye-slash (hidden) ↔ eye (visible)
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('bi-eye-slash', !isHidden);
+        icon.classList.toggle('bi-eye', isHidden);
+      }
+
+      // Toggle revealed styling
+      btn.classList.toggle('is-revealed', isHidden);
+
+      // Update accessible label
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+
+      // Keep focus on the input for uninterrupted typing
+      input.focus();
+    });
+  });
+
   // ---- Theme Toggle (Dark & Light Mode — Anglobot Reference) ----
   function getTheme() {
     return localStorage.getItem('portal_theme') || 'dark';

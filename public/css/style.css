@@ -750,6 +750,94 @@ small.text-muted,
   border-left: none;
 }
 
+/* Password visibility toggle — Modern best practice (2025+)
+   Uses a <button> for accessibility, absolute-positioned inside
+   the Bootstrap .input-group wrapper so it overlays the right
+   side of the password field. */
+.password-toggle-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  transition: color 0.2s ease, background-color 0.25s ease;
+}
+
+.password-toggle-btn i {
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.10);
+}
+
+.password-toggle-btn:hover i {
+  transform: scale(1.12);
+}
+
+/* Keyboard-only focus ring (a11y) */
+.password-toggle-btn:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: -2px;
+}
+
+.password-toggle-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Active / revealed state — icon turns primary */
+.password-toggle-btn.is-revealed {
+  color: var(--color-primary-light);
+}
+
+.password-toggle-btn.is-revealed:hover {
+  color: var(--color-primary);
+  background: var(--color-primary-glow);
+}
+
+/* Ensure the input-group is position:relative for the absolute button */
+.auth-input-group .input-group {
+  position: relative;
+}
+
+/* Give the password input right padding so text doesn't go under the toggle */
+.auth-input-group .input-group input[type="password"],
+.auth-input-group .input-group input[type="text"] {
+  padding-right: 2.75rem;
+}
+
+/* Light theme overrides */
+[data-theme="light"] .password-toggle-btn {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .password-toggle-btn:hover {
+  color: #334155;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .password-toggle-btn.is-revealed {
+  color: var(--color-primary);
+}
+
+[data-theme="light"] .password-toggle-btn.is-revealed:hover {
+  color: var(--color-primary-dark);
+  background: rgba(99, 102, 241, 0.10);
+}
+
 /* OTP input */
 .otp-input {
   text-align: center;
