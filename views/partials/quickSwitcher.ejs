@@ -1,0 +1,61 @@
+<!-- Global Quick Switcher (Ctrl + K Command Palette) -->
+<div class="quick-switcher-overlay" id="quickSwitcherOverlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="quickSwitcherInput">
+  <div class="quick-switcher-backdrop" id="quickSwitcherBackdrop"></div>
+
+  <div class="quick-switcher-dialog" role="document">
+    <!-- Header: Search Input -->
+    <div class="quick-switcher-header">
+      <div class="quick-switcher-search-icon">
+        <i class="bi bi-search"></i>
+      </div>
+      <input type="text"
+             class="quick-switcher-input"
+             id="quickSwitcherInput"
+             placeholder="Search apps, admin tools, pages, actions... (e.g. PGJ, Audit, Theme)"
+             autocomplete="off"
+             autocorrect="off"
+             autocapitalize="off"
+             spellcheck="false"
+             aria-label="Quick search portal">
+      <button type="button" class="quick-switcher-clear-btn" id="quickSwitcherClearBtn" style="display: none;" aria-label="Clear search">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+      <button type="button" class="quick-switcher-close-btn" id="quickSwitcherCloseBtn" aria-label="Close search">
+        <kbd class="d-none d-sm-inline-block">ESC</kbd>
+        <i class="bi bi-x-lg d-inline-block d-sm-none"></i>
+      </button>
+    </div>
+
+    <!-- Category Filter Pills (Optional Quick Filter Row) -->
+    <div class="quick-switcher-tabs" id="quickSwitcherTabs">
+      <button type="button" class="quick-tab active" data-category="all">All</button>
+      <button type="button" class="quick-tab" data-category="Applications">Apps</button>
+      <button type="button" class="quick-tab" data-category="Admin Tools">Admin</button>
+      <button type="button" class="quick-tab" data-category="Quick Actions">Actions</button>
+    </div>
+
+    <!-- Results Body -->
+    <div class="quick-switcher-body" id="quickSwitcherResults" role="listbox">
+      <!-- Loading state -->
+      <div class="quick-switcher-loading" id="quickSwitcherLoading">
+        <span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
+        <span>Loading searchable items...</span>
+      </div>
+    </div>
+
+    <!-- Footer: Shortcut hints and mobile guidance -->
+    <div class="quick-switcher-footer">
+      <div class="quick-switcher-hints d-none d-md-flex align-items-center gap-3">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Select</span>
+        <span><kbd>esc</kbd> Close</span>
+      </div>
+      <div class="quick-switcher-mobile-hints d-flex d-md-none align-items-center">
+        <span><i class="bi bi-hand-index-thumb me-1"></i> Tap to open</span>
+      </div>
+      <div class="quick-switcher-meta ms-auto">
+        <span class="badge badge-portal" id="quickSwitcherCounter">0 items</span>
+      </div>
+    </div>
+  </div>
+</div>

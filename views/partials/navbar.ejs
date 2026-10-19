@@ -11,6 +11,20 @@
     </a>
 
     <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+      <!-- Desktop Quick Switcher Trigger -->
+      <button class="quick-switcher-nav-trigger d-none d-lg-flex align-items-center" type="button" id="navQuickSwitcherBtn" title="Search applications, admin tools, and actions (Ctrl + K)">
+        <i class="bi bi-search me-2"></i>
+        <span class="switcher-placeholder">Search apps, tools, actions...</span>
+        <kbd class="shortcut-badge ms-auto">Ctrl K</kbd>
+      </button>
+
+      <div class="d-flex align-items-center gap-2 d-lg-none ms-auto me-2">
+        <!-- Mobile Quick Switcher Trigger (Direct touch access for phones) -->
+        <button class="quick-switcher-mobile-trigger" type="button" id="mobileQuickSwitcherBtn" aria-label="Quick Search" title="Quick Search">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>

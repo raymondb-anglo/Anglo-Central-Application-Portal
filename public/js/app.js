@@ -271,12 +271,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize button state immediately
   applyTheme(getTheme());
 
+  // Expose portal theme toggle for command palette action
+  window.portalToggleTheme = function() {
+    const current = getTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  };
+
   // Attach click handler to all theme toggle buttons
   document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const current = getTheme();
-      const next = current === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
+      window.portalToggleTheme();
     });
   });
 
@@ -350,6 +355,370 @@ document.addEventListener('DOMContentLoaded', () => {
         targetForm.submit();
       }
     });
+  }
+
+  // ---- Announcement Banner (Feature Discovery) ----
+  const bannerEl = document.getElementById('portalAnnouncementBanner');
+  const bannerDismissBtn = document.getElementById('bannerDismissBtn');
+  const bannerTryBtn = document.getElementById('bannerTrySwitcherBtn');
+  const BANNER_STORAGE_KEY = 'portal_announcement_switcher_v1_dismissed';
+
+  if (bannerEl) {
+    const isDismissed = localStorage.getItem(BANNER_STORAGE_KEY) === 'true';
+    if (!isDismissed) {
+      bannerEl.style.display = 'block';
+    }
+
+    if (bannerDismissBtn) {
+      bannerDismissBtn.addEventListener('click', () => {
+        bannerEl.style.transition = 'all 0.3s ease';
+        bannerEl.style.opacity = '0';
+        bannerEl.style.maxHeight = '0';
+        bannerEl.style.padding = '0';
+        localStorage.setItem(BANNER_STORAGE_KEY, 'true');
+        setTimeout(() => { bannerEl.style.display = 'none'; }, 300);
+      });
+    }
+
+    if (bannerTryBtn) {
+      bannerTryBtn.addEventListener('click', () => {
+        if (typeof openQuickSwitcher === 'function') openQuickSwitcher();
+      });
+    }
+  }
+
+  // ---- Global Quick Switcher (Ctrl + K Command Palette) ----
+  const switcherOverlay = document.getElementById('quickSwitcherOverlay');
+  const switcherInput = document.getElementById('quickSwitcherInput');
+  const switcherResults = document.getElementById('quickSwitcherResults');
+  const switcherCounter = document.getElementById('quickSwitcherCounter');
+  const switcherClearBtn = document.getElementById('quickSwitcherClearBtn');
+  const switcherCloseBtn = document.getElementById('quickSwitcherCloseBtn');
+  const switcherBackdrop = document.getElementById('quickSwitcherBackdrop');
+  const switcherTabs = document.querySelectorAll('#quickSwitcherTabs .quick-tab');
+
+  let switcherItems = null; // cached items from /api/quick-search
+  let currentFilteredItems = [];
+  let currentActiveIndex = 0;
+  let currentCategory = 'all';
+
+  async function loadSwitcherItems() {
+    if (switcherItems) return switcherItems;
+    try {
+      const res = await fetch('/api/quick-search');
+      if (res.ok) {
+        const data = await res.json();
+        switcherItems = data.items || [];
+      } else {
+        switcherItems = [];
+      }
+    } catch (e) {
+      console.error('[QUICK SWITCHER] Failed to load items:', e);
+      switcherItems = [];
+    }
+    return switcherItems;
+  }
+
+  function highlightMatches(text, query) {
+    if (!query) return escapeHtml(text);
+    const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+    return escapeHtml(text).replace(regex, '<mark class="quick-highlight">$1</mark>');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function renderSwitcherResults(query = '') {
+    if (!switcherResults) return;
+
+    const trimmed = query.trim().toLowerCase();
+
+    // Filter items
+    const matched = (switcherItems || []).filter(item => {
+      // Category filter
+      if (currentCategory !== 'all' && item.category !== currentCategory) {
+        return false;
+      }
+      if (!trimmed) return true;
+
+      const titleMatch = item.title && item.title.toLowerCase().includes(trimmed);
+      const subtitleMatch = item.subtitle && item.subtitle.toLowerCase().includes(trimmed);
+      const campusMatch = item.campus && item.campus.toLowerCase().includes(trimmed);
+      const codeMatch = item.code && item.code.toLowerCase().includes(trimmed);
+      const keywordsMatch = item.keywords && item.keywords.toLowerCase().includes(trimmed);
+
+      return titleMatch || subtitleMatch || campusMatch || codeMatch || keywordsMatch;
+    });
+
+    currentFilteredItems = matched;
+    currentActiveIndex = 0;
+
+    if (switcherCounter) {
+      switcherCounter.textContent = `${matched.length} ${matched.length === 1 ? 'item' : 'items'}`;
+    }
+
+    if (matched.length === 0) {
+      switcherResults.innerHTML = `
+        <div class="quick-switcher-empty">
+          <div class="quick-switcher-empty-icon"><i class="bi bi-search"></i></div>
+          <div class="quick-switcher-empty-title">No matching items</div>
+          <div class="quick-switcher-empty-desc">No applications, pages, or actions found for "${escapeHtml(query)}". Try another search term.</div>
+        </div>
+      `;
+      return;
+    }
+
+    // Group items by category
+    const groups = {};
+    matched.forEach((item, index) => {
+      const cat = item.category || 'General';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push({ item, globalIndex: index });
+    });
+
+    let html = '';
+    for (const [catName, itemsWithIndex] of Object.entries(groups)) {
+      html += `<div class="quick-group-header">${escapeHtml(catName)} (${itemsWithIndex.length})</div>`;
+      itemsWithIndex.forEach(({ item, globalIndex }) => {
+        const isActive = globalIndex === currentActiveIndex ? ' active' : '';
+        const campusBadge = item.campus ? `<span class="quick-tag"><i class="bi bi-building me-1"></i>${escapeHtml(item.campus)}</span>` : '';
+        const metaIcon = item.type === 'app' ? '<i class="bi bi-box-arrow-up-right"></i>' : (item.type === 'page' ? '<i class="bi bi-arrow-right"></i>' : '<i class="bi bi-lightning-charge"></i>');
+
+        html += `
+          <div class="quick-item${isActive}" data-index="${globalIndex}" data-category="${escapeHtml(item.category || '')}">
+            <div class="quick-item-icon">
+              <i class="bi bi-${escapeHtml(item.icon || 'app-indicator')}"></i>
+            </div>
+            <div class="quick-item-info">
+              <div class="quick-item-title">
+                <span>${highlightMatches(item.title, trimmed)}</span>
+              </div>
+              <div class="quick-item-subtitle">${highlightMatches(item.subtitle, trimmed)}</div>
+            </div>
+            <div class="quick-item-meta">
+              ${campusBadge}
+              <span class="quick-enter-indicator">${metaIcon}</span>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    switcherResults.innerHTML = html;
+
+    // Attach click events to items
+    switcherResults.querySelectorAll('.quick-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.dataset.index, 10);
+        executeItem(currentFilteredItems[idx]);
+      });
+      el.addEventListener('mouseenter', () => {
+        const idx = parseInt(el.dataset.index, 10);
+        setActiveItem(idx, false);
+      });
+    });
+  }
+
+  function setActiveItem(index, scrollIntoView = true) {
+    if (currentFilteredItems.length === 0) return;
+    currentActiveIndex = Math.max(0, Math.min(index, currentFilteredItems.length - 1));
+
+    const itemEls = switcherResults.querySelectorAll('.quick-item');
+    itemEls.forEach((el) => {
+      const match = parseInt(el.dataset.index, 10) === currentActiveIndex;
+      el.classList.toggle('active', match);
+      if (match && scrollIntoView) {
+        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }
+
+  function executeItem(item) {
+    if (!item) return;
+
+    closeQuickSwitcher();
+
+    if (item.type === 'app') {
+      window.open(item.url, '_blank');
+    } else if (item.type === 'page') {
+      window.location.href = item.url;
+    } else if (item.type === 'action') {
+      if (item.actionId === 'toggle-theme') {
+        if (typeof window.portalToggleTheme === 'function') {
+          window.portalToggleTheme();
+        }
+      } else if (item.actionId === 'sign-out') {
+        window.location.href = item.url;
+      }
+    } else if (item.type === 'filter') {
+      const campus = item.campus;
+      const targetTab = document.querySelector(`.filter-tab[data-campus="${campus}"]`);
+      if (targetTab) {
+        targetTab.click();
+        const appGrid = document.getElementById('app-grid');
+        if (appGrid) appGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.location.href = `/?campus=${encodeURIComponent(campus)}`;
+      }
+    }
+  }
+
+  async function openQuickSwitcher() {
+    if (!switcherOverlay) return;
+    switcherOverlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    if (switcherInput) {
+      switcherInput.value = '';
+      switcherInput.focus();
+    }
+    if (switcherClearBtn) switcherClearBtn.style.display = 'none';
+
+    // Reset tabs
+    currentCategory = 'all';
+    switcherTabs.forEach(t => t.classList.toggle('active', t.dataset.category === 'all'));
+
+    if (!switcherItems) {
+      const loadingEl = document.getElementById('quickSwitcherLoading');
+      if (loadingEl) loadingEl.style.display = 'flex';
+      await loadSwitcherItems();
+    }
+
+    renderSwitcherResults('');
+  }
+
+  function closeQuickSwitcher() {
+    if (!switcherOverlay) return;
+    switcherOverlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function toggleQuickSwitcher() {
+    if (!switcherOverlay) return;
+    if (switcherOverlay.style.display === 'none' || !switcherOverlay.style.display) {
+      openQuickSwitcher();
+    } else {
+      closeQuickSwitcher();
+    }
+  }
+
+  window.openQuickSwitcher = openQuickSwitcher;
+  window.closeQuickSwitcher = closeQuickSwitcher;
+
+  // Global Keyboard shortcuts: Ctrl + K, Cmd + K, or "/"
+  window.addEventListener('keydown', (e) => {
+    // Ctrl+K or Cmd+K
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      toggleQuickSwitcher();
+      return;
+    }
+
+    // Single "/" key when not typing in an input/textarea/editable
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const activeEl = document.activeElement;
+      const isInput = activeEl && (
+        activeEl.tagName === 'INPUT' ||
+        activeEl.tagName === 'TEXTAREA' ||
+        activeEl.tagName === 'SELECT' ||
+        activeEl.isContentEditable
+      );
+      if (!isInput && switcherOverlay && (switcherOverlay.style.display === 'none' || !switcherOverlay.style.display)) {
+        e.preventDefault();
+        openQuickSwitcher();
+        return;
+      }
+    }
+
+    // Inside opened switcher modal
+    if (switcherOverlay && switcherOverlay.style.display !== 'none') {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeQuickSwitcher();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentFilteredItems.length > 0) {
+          setActiveItem((currentActiveIndex + 1) % currentFilteredItems.length);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentFilteredItems.length > 0) {
+          setActiveItem((currentActiveIndex - 1 + currentFilteredItems.length) % currentFilteredItems.length);
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentFilteredItems.length > 0 && currentFilteredItems[currentActiveIndex]) {
+          executeItem(currentFilteredItems[currentActiveIndex]);
+        }
+      }
+    }
+  });
+
+  // Attach search triggers across the app
+  const navTrigger = document.getElementById('navQuickSwitcherBtn');
+  if (navTrigger) navTrigger.addEventListener('click', openQuickSwitcher);
+
+  const mobileTrigger = document.getElementById('mobileQuickSwitcherBtn');
+  if (mobileTrigger) mobileTrigger.addEventListener('click', openQuickSwitcher);
+
+  const dashboardTrigger = document.getElementById('dashboardSearchBtn');
+  if (dashboardTrigger) dashboardTrigger.addEventListener('click', openQuickSwitcher);
+
+  // Close & Clear buttons
+  if (switcherCloseBtn) switcherCloseBtn.addEventListener('click', closeQuickSwitcher);
+  if (switcherBackdrop) switcherBackdrop.addEventListener('click', closeQuickSwitcher);
+
+  if (switcherClearBtn) {
+    switcherClearBtn.addEventListener('click', () => {
+      if (switcherInput) {
+        switcherInput.value = '';
+        switcherInput.focus();
+        switcherClearBtn.style.display = 'none';
+        renderSwitcherResults('');
+      }
+    });
+  }
+
+  if (switcherInput) {
+    switcherInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (switcherClearBtn) {
+        switcherClearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+      }
+      renderSwitcherResults(val);
+    });
+  }
+
+  // Category filter tabs inside modal
+  switcherTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      switcherTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentCategory = tab.dataset.category || 'all';
+      renderSwitcherResults(switcherInput ? switcherInput.value : '');
+    });
+  });
+
+  // Pre-load items in background when idle
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(() => {
+      if (switcherOverlay) loadSwitcherItems();
+    });
+  } else {
+    setTimeout(() => {
+      if (switcherOverlay) loadSwitcherItems();
+    }, 2000);
   }
 });
 

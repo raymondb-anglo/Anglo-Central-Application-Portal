@@ -20,6 +20,7 @@ import adminRolesRoutes from './routes/admin/roles.js';
 import adminAuditLogsRoutes from './routes/admin/auditLogs.js';
 import ssoApiRoutes from './routes/api/sso.js';
 import healthStatusRoutes from './routes/api/healthStatus.js';
+import quickSearchRoutes from './routes/api/quickSearch.js';
 import { isSSOConfigured } from './utils/sso.js';
 import { startHealthChecker } from './utils/healthCheck.js';
 
@@ -110,6 +111,7 @@ app.use('/admin/roles', adminRolesRoutes);
 app.use('/admin/audit-logs', adminAuditLogsRoutes);
 app.use('/api/sso', ssoApiRoutes);
 app.use('/api/health-status', healthStatusRoutes);
+app.use('/api/quick-search', quickSearchRoutes);
 
 // ---- Health check ----
 app.get('/health', async (req, res) => {

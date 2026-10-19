@@ -23,10 +23,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <!-- Portal Styles -->
-  <link rel="stylesheet" href="/css/style.css?v=2.6">
+  <link rel="stylesheet" href="/css/style.css?v=2.7">
 </head>
 <body>
   <%- include('partials/navbar') %>
+  <%- include('partials/announcementBanner') %>
 
   <main class="main-content">
     <%- body %>
@@ -54,12 +55,17 @@
     </div>
   </div>
 
+  <!-- Global Quick Switcher (Ctrl + K Command Palette) -->
+  <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+    <%- include('partials/quickSwitcher') %>
+  <% } %>
+
   <%- include('partials/footer') %>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Portal JS -->
-  <script src="/js/app.js?v=2.5"></script>
+  <script src="/js/app.js?v=2.6"></script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+<!-- Feature Announcement Banner -->
+<% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+  <div class="portal-announcement-banner" id="portalAnnouncementBanner" style="display: none;" role="region" aria-label="Portal Announcement">
+    <div class="container">
+      <div class="announcement-content d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2 announcement-text-wrap">
+          <span class="announcement-badge">
+            <i class="bi bi-stars"></i> New Feature
+          </span>
+          <span class="announcement-message">
+            <strong>Global Quick Switcher</strong> — Press <kbd class="announcement-kbd d-none d-sm-inline-block">Ctrl + K</kbd><span class="d-inline-block d-sm-none">the <strong>Search 🔍</strong> icon</span> to instantly find &amp; launch any school app, jump to admin tools, or switch themes!
+          </span>
+        </div>
+        <div class="d-flex align-items-center gap-2 announcement-actions ms-auto">
+          <button type="button" class="btn btn-sm btn-announcement-action" id="bannerTrySwitcherBtn">
+            <i class="bi bi-search me-1"></i>
+            <span>Try Search</span>
+          </button>
+          <button type="button" class="btn-announcement-dismiss" id="bannerDismissBtn" title="Dismiss announcement" aria-label="Dismiss announcement">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>

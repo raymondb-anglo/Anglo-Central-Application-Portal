@@ -48,10 +48,17 @@
             </button>
           <% } %>
         </div>
-        <div class="app-count ms-auto">
-          <span class="badge badge-portal" id="app-count-badge">
-            <i class="bi bi-grid-3x3 me-1"></i><span id="visible-count"><%= applications.length %></span> apps
-          </span>
+        <div class="dashboard-search-box ms-auto d-flex align-items-center gap-2">
+          <button type="button" class="dashboard-search-btn" id="dashboardSearchBtn" title="Quick Search applications (Ctrl + K)">
+            <i class="bi bi-search me-1"></i>
+            <span class="d-none d-sm-inline">Search</span>
+            <kbd class="shortcut-pill d-none d-md-inline ms-1">Ctrl K</kbd>
+          </button>
+          <div class="app-count">
+            <span class="badge badge-portal" id="app-count-badge">
+              <i class="bi bi-grid-3x3 me-1"></i><span id="visible-count"><%= applications.length %></span> apps
+            </span>
+          </div>
         </div>
       </div>
 
