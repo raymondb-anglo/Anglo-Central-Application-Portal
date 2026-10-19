@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { logAudit, getClientIP } from '../../utils/auditLog.js';
 import db from '../../db.js';
+import { applicationSchema, validateBody } from '../../middleware/validators.js';
 
 const router = Router();
 
@@ -123,41 +124,38 @@ router.get('/:id/edit', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), asyn
 /**
  * POST /admin/applications — Create new application
  */
-router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
+router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), validateBody(applicationSchema, (req, res, err) => {
+  res.render('admin/application-form', {
+    layout: 'layout',
+    title: 'Add Application',
+    application: req.body,
+    isEdit: false,
+    user: req.user,
+    error: err
+  });
+}), async (req, res) => {
   try {
     const {
       applicationCode, application, campus, link, description,
       databaseType, technology, name, icon, displayOrder, status
-    } = req.body;
-
-    // Validation
-    if (!applicationCode || !application || !link) {
-      return res.render('admin/application-form', {
-        layout: 'layout',
-        title: 'Add Application',
-        application: req.body,
-        isEdit: false,
-        user: req.user,
-        error: 'Application Code, Application Name, and Link are required.'
-      });
-    }
+    } = req.validatedBody;
 
     await db.query(
       `INSERT INTO ApplicationInformation
        (ApplicationCode, Application, Campus, Link, Description, DatabaseType, Technology, Name, Icon, DisplayOrder, Status, CreatedAt, UpdatedAt)
        VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, GETDATE(), GETDATE())`,
       [
-        applicationCode.trim(),
-        application.trim(),
-        campus?.trim() || null,
-        link.trim(),
-        description?.trim() || null,
-        databaseType?.trim() || null,
-        technology?.trim() || null,
-        name?.trim() || null,
-        icon?.trim() || null,
-        parseInt(displayOrder, 10) || 0,
-        status || 'Active'
+        applicationCode,
+        application,
+        campus,
+        link,
+        description,
+        databaseType,
+        technology,
+        name,
+        icon,
+        displayOrder,
+        status
       ]
     );
 
@@ -188,25 +186,30 @@ router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req,
 /**
  * POST /admin/applications/:id — Update application
  */
-router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
+router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), (req, res, next) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id) || id <= 0) {
+    return res.redirect('/admin/applications?error=' + encodeURIComponent('Invalid application ID.'));
+  }
+  next();
+}, validateBody(applicationSchema, (req, res, err) => {
+  const id = parseInt(req.params.id, 10);
+  res.render('admin/application-form', {
+    layout: 'layout',
+    title: 'Edit Application',
+    application: { ...req.body, Id: id },
+    isEdit: true,
+    user: req.user,
+    error: err
+  });
+}), async (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   try {
     const {
       applicationCode, application, campus, link, description,
       databaseType, technology, name, icon, displayOrder, status
-    } = req.body;
-
-    if (!applicationCode || !application || !link) {
-      return res.render('admin/application-form', {
-        layout: 'layout',
-        title: 'Edit Application',
-        application: { ...req.body, Id: id },
-        isEdit: true,
-        user: req.user,
-        error: 'Application Code, Application Name, and Link are required.'
-      });
-    }
+    } = req.validatedBody;
 
     await db.query(
       `UPDATE ApplicationInformation SET
@@ -216,17 +219,17 @@ router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (r
          UpdatedAt = GETDATE()
        WHERE Id = @p11`,
       [
-        applicationCode.trim(),
-        application.trim(),
-        campus?.trim() || null,
-        link.trim(),
-        description?.trim() || null,
-        databaseType?.trim() || null,
-        technology?.trim() || null,
-        name?.trim() || null,
-        icon?.trim() || null,
-        parseInt(displayOrder, 10) || 0,
-        status || 'Active',
+        applicationCode,
+        application,
+        campus,
+        link,
+        description,
+        databaseType,
+        technology,
+        name,
+        icon,
+        displayOrder,
+        status,
         id
       ]
     );

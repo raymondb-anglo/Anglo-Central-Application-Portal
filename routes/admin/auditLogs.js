@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { logAudit, getClientIP } from '../../utils/auditLog.js';
 import db from '../../db.js';
+import { exportLimiter } from '../../middleware/rateLimiter.js';
 
 const router = Router();
 
@@ -172,7 +173,7 @@ router.get('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, 
  * Applies the same filters as the main listing page.
  * Uses exceljs (same library as PGJ-Booking-System).
  */
-router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
+router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), exportLimiter, async (req, res) => {
   try {
     const ExcelJS = (await import('exceljs')).default;
     const { whereClause, params, filters } = buildWhereAndParams(req.query);

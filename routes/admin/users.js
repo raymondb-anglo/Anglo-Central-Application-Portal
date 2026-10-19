@@ -4,6 +4,8 @@ import multer from 'multer';
 import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { logAudit, getClientIP } from '../../utils/auditLog.js';
 import db from '../../db.js';
+import { exportLimiter } from '../../middleware/rateLimiter.js';
+import { userSchema, validateBody } from '../../middleware/validators.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -58,7 +60,7 @@ function parseCSV(text) {
  * GET /admin/users/export — Export user list to Excel (.xlsx)
  * Uses exceljs (same library as PGJ-Booking-System).
  */
-router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
+router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), exportLimiter, async (req, res) => {
   try {
     const ExcelJS = (await import('exceljs')).default;
 
@@ -423,17 +425,15 @@ router.get('/:id/edit', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), asyn
 /**
  * POST /admin/users — Create new user
  */
-router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
+router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), validateBody(userSchema, (req, res, err) => {
+  res.redirect('/admin/users/new?error=' + encodeURIComponent(err));
+}), async (req, res) => {
   try {
-    const { email, displayName, firstName, lastName, isActive } = req.body;
+    const { email, displayName, firstName, lastName, isActive } = req.validatedBody;
     let roleIds = req.body.roles || [];
     let appIds = req.body.applications || [];
     if (!Array.isArray(roleIds)) roleIds = [roleIds];
     if (!Array.isArray(appIds)) appIds = [appIds];
-
-    if (!email) {
-      return res.redirect('/admin/users/new?error=' + encodeURIComponent('Email is required.'));
-    }
 
     // Hash password if provided
     const { password, confirmPassword } = req.body;
@@ -482,12 +482,26 @@ router.post('/', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req,
  */
 router.post('/:id', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id) || id <= 0) {
+    return res.redirect('/admin/users?error=' + encodeURIComponent('Invalid user ID.'));
+  }
+
   try {
     const { displayName, firstName, lastName, isActive } = req.body;
     let roleIds = req.body.roles || [];
     let appIds = req.body.applications || [];
     if (!Array.isArray(roleIds)) roleIds = [roleIds];
     if (!Array.isArray(appIds)) appIds = [appIds];
+
+    if (displayName && displayName.trim().length > 255) {
+      return res.redirect('/admin/users/' + id + '/edit?error=' + encodeURIComponent('Display Name cannot exceed 255 characters.'));
+    }
+    if (firstName && firstName.trim().length > 100) {
+      return res.redirect('/admin/users/' + id + '/edit?error=' + encodeURIComponent('First Name cannot exceed 100 characters.'));
+    }
+    if (lastName && lastName.trim().length > 100) {
+      return res.redirect('/admin/users/' + id + '/edit?error=' + encodeURIComponent('Last Name cannot exceed 100 characters.'));
+    }
 
     // Hash password if provided
     const { password, confirmPassword } = req.body;

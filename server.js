@@ -21,6 +21,7 @@ import adminAuditLogsRoutes from './routes/admin/auditLogs.js';
 import ssoApiRoutes from './routes/api/sso.js';
 import healthStatusRoutes from './routes/api/healthStatus.js';
 import quickSearchRoutes from './routes/api/quickSearch.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 import { isSSOConfigured } from './utils/sso.js';
 import { startHealthChecker } from './utils/healthCheck.js';
 
@@ -109,6 +110,7 @@ app.use('/admin/applications', adminApplicationsRoutes);
 app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/roles', adminRolesRoutes);
 app.use('/admin/audit-logs', adminAuditLogsRoutes);
+app.use('/api', apiLimiter);
 app.use('/api/sso', ssoApiRoutes);
 app.use('/api/health-status', healthStatusRoutes);
 app.use('/api/quick-search', quickSearchRoutes);

@@ -5,6 +5,7 @@ import passport from '../config/passport.js';
 import { logAudit, getClientIP } from '../utils/auditLog.js';
 import { sendOTP, generateOTP, sendPasswordReset } from '../utils/email.js';
 import db from '../db.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
@@ -117,7 +118,7 @@ router.get('/google/callback',
 /**
  * POST /auth/password-login — Login with email and password
  */
-router.post('/password-login', async (req, res) => {
+router.post('/password-login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -185,7 +186,7 @@ router.post('/password-login', async (req, res) => {
  * POST /auth/otp-request — Send OTP code to user's email
  * Uses OWASP-compliant generic response message.
  */
-router.post('/otp-request', async (req, res) => {
+router.post('/otp-request', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -269,7 +270,7 @@ router.post('/otp-request', async (req, res) => {
 /**
  * POST /auth/otp-verify — Verify OTP code and log in
  */
-router.post('/otp-verify', async (req, res) => {
+router.post('/otp-verify', authLimiter, async (req, res) => {
   try {
     const { email, code } = req.body;
 
@@ -368,7 +369,7 @@ router.get('/forgot-password', (req, res) => {
  * POST /auth/forgot-password — Send password reset link
  * Uses OWASP-compliant generic response + hashed token storage.
  */
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -506,7 +507,7 @@ router.get('/reset-password', async (req, res) => {
 /**
  * POST /auth/reset-password — Process password reset
  */
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', authLimiter, async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
 
