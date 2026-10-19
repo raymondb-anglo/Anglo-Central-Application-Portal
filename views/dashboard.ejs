@@ -55,15 +55,47 @@
         </div>
       </div>
 
+      <!-- Health status summary -->
+      <div class="health-summary" id="health-summary" style="display:none;">
+        <div class="health-summary-label">
+          <i class="bi bi-activity me-1"></i> System Status
+        </div>
+        <div class="health-summary-badges">
+          <span class="health-summary-item health-summary-online">
+            <span class="health-dot"></span>
+            <span id="health-online-count">0</span> Online
+          </span>
+          <span class="health-summary-item health-summary-degraded">
+            <span class="health-dot"></span>
+            <span id="health-degraded-count">0</span> Slow
+          </span>
+          <span class="health-summary-item health-summary-offline">
+            <span class="health-dot"></span>
+            <span id="health-offline-count">0</span> Offline
+          </span>
+        </div>
+        <div class="health-summary-meta ms-auto">
+          <span class="health-last-checked" id="health-last-checked"></span>
+        </div>
+      </div>
+
       <div class="app-grid" id="app-grid">
         <% applications.forEach(app => { %>
           <a href="/launch/<%= app.Id %>"
              class="app-card"
              data-campus="<%= app.Campus || 'global' %>"
              data-app-code="<%= app.ApplicationCode %>"
+             data-app-id="<%= app.Id %>"
              target="_blank"
              rel="noopener noreferrer"
              title="<%= app.Application %><%= app.Campus ? ' — ' + app.Campus : '' %>">
+            <!-- Health status badge -->
+            <span class="health-badge health-unknown"
+                  data-health-id="<%= app.Id %>"
+                  title="Checking status...">
+              <span class="health-dot"></span>
+              <span class="health-label">—</span>
+            </span>
             <div class="app-card-icon" data-app="<%= app.ApplicationCode %>">
               <i class="bi bi-<%= app.Icon || 'app-indicator' %>"></i>
             </div>

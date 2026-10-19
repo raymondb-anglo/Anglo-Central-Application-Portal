@@ -1403,6 +1403,218 @@ small.text-muted,
 .app-card-icon[data-app="MEET"] { background: linear-gradient(135deg, #dc2626, #ef4444); }
 
 /* =====================================================
+   HEALTH STATUS BADGES — Dashboard App Cards
+   Inspired by Dashy & Homer status indicators
+   ===================================================== */
+
+/* ---- Health Badge (positioned in top-right of app-card) ---- */
+.health-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  transition: all var(--transition-fast);
+  line-height: 1.6;
+}
+
+.health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ---- Status: Online (🟢) ---- */
+.health-online {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.health-online .health-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+/* ---- Status: Degraded / Slow (🟡) ---- */
+.health-degraded {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.health-degraded .health-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  animation: health-pulse-amber 2s ease-in-out infinite;
+}
+
+/* ---- Status: Offline (🔴) ---- */
+.health-offline {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.health-offline .health-dot {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  animation: health-pulse-red 1.5s ease-in-out infinite;
+}
+
+/* ---- Status: Unknown / Checking (⚪) ---- */
+.health-unknown {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.health-unknown .health-dot {
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+.health-unknown .health-label {
+  opacity: 0.6;
+}
+
+/* ---- Pulse Animations ---- */
+@keyframes health-pulse-amber {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(245, 158, 11, 0.6); }
+  50% { opacity: 0.4; box-shadow: 0 0 2px rgba(245, 158, 11, 0.3); }
+}
+
+@keyframes health-pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+  50% { opacity: 0.5; transform: scale(1.3); box-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
+}
+
+/* ---- Health Summary Bar (above app grid) ---- */
+.health-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+  font-size: var(--font-size-sm);
+  flex-wrap: wrap;
+}
+
+.health-summary-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.health-summary-badges {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.health-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.health-summary-online { color: #10b981; }
+.health-summary-online .health-dot { background: #10b981; box-shadow: 0 0 4px rgba(16, 185, 129, 0.5); }
+
+.health-summary-degraded { color: #f59e0b; }
+.health-summary-degraded .health-dot { background: #f59e0b; box-shadow: 0 0 4px rgba(245, 158, 11, 0.5); }
+
+.health-summary-offline { color: #ef4444; }
+.health-summary-offline .health-dot { background: #ef4444; box-shadow: 0 0 4px rgba(239, 68, 68, 0.5); }
+
+.health-summary-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.health-last-checked {
+  opacity: 0.7;
+}
+
+/* ---- Light Theme Overrides for Health Badges ---- */
+[data-theme="light"] .health-online {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+[data-theme="light"] .health-degraded {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+}
+
+[data-theme="light"] .health-offline {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+[data-theme="light"] .health-unknown {
+  background: rgba(100, 116, 139, 0.06);
+  border-color: rgba(100, 116, 139, 0.1);
+}
+
+[data-theme="light"] .health-summary {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Responsive: Health badges on small screens ---- */
+@media (max-width: 576px) {
+  .health-badge {
+    top: 0.35rem;
+    right: 0.35rem;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .health-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .health-label {
+    display: none; /* Only show dot on very small screens */
+  }
+
+  .health-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .health-summary-meta {
+    margin-left: 0 !important;
+  }
+}
+
+/* =====================================================
    ADMIN — STATS
    ===================================================== */
 .admin-stats {

@@ -19,7 +19,9 @@ import adminUsersRoutes from './routes/admin/users.js';
 import adminRolesRoutes from './routes/admin/roles.js';
 import adminAuditLogsRoutes from './routes/admin/auditLogs.js';
 import ssoApiRoutes from './routes/api/sso.js';
+import healthStatusRoutes from './routes/api/healthStatus.js';
 import { isSSOConfigured } from './utils/sso.js';
+import { startHealthChecker } from './utils/healthCheck.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -107,6 +109,7 @@ app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/roles', adminRolesRoutes);
 app.use('/admin/audit-logs', adminAuditLogsRoutes);
 app.use('/api/sso', ssoApiRoutes);
+app.use('/api/health-status', healthStatusRoutes);
 
 // ---- Health check ----
 app.get('/health', async (req, res) => {
@@ -161,6 +164,8 @@ const port = parseInt(process.env.PORT || '3000', 10);
   }
 
   app.listen(port, '0.0.0.0', () => {
+    // Start background health checks after server is ready
+    if (dbConnected) startHealthChecker();
     console.log('');
     console.log('  ╔═══════════════════════════════════════════════╗');
     console.log('  ║   Anglo Central Application Portal            ║');

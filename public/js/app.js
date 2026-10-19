@@ -265,3 +265,119 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ---- Health Status Polling (Dashboard) ----
+// Self-contained module: polls /api/health-status every 60s and updates
+// the status badges on each app card + the summary bar.
+(function initHealthStatus() {
+  'use strict';
+
+  // Only run on the dashboard page (where app cards exist)
+  const appGrid = document.getElementById('app-grid');
+  if (!appGrid) return;
+
+  const POLL_INTERVAL = 60_000; // 60 seconds
+
+  /**
+   * Build a human-readable tooltip from health data.
+   */
+  function buildTooltip(info) {
+    const parts = [];
+
+    if (info.status === 'online') parts.push('✅ Online');
+    else if (info.status === 'degraded') parts.push('⚠️ Slow / Degraded');
+    else if (info.status === 'offline') parts.push('❌ Offline');
+    else parts.push('⏳ Checking...');
+
+    if (info.latency !== null && info.latency !== undefined) {
+      parts.push(`Latency: ${info.latency}ms`);
+    }
+    if (info.httpCode) {
+      parts.push(`HTTP ${info.httpCode}`);
+    }
+    if (info.lastChecked) {
+      const checked = new Date(info.lastChecked);
+      parts.push(`Checked: ${checked.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`);
+    }
+
+    return parts.join('\n');
+  }
+
+  /**
+   * Map status to label text.
+   */
+  function statusLabel(status) {
+    switch (status) {
+      case 'online': return 'Online';
+      case 'degraded': return 'Slow';
+      case 'offline': return 'Offline';
+      default: return '—';
+    }
+  }
+
+  /**
+   * Update all health badges on the dashboard.
+   */
+  function updateBadges(statuses) {
+    for (const [appId, info] of Object.entries(statuses)) {
+      const badge = document.querySelector(`[data-health-id="${appId}"]`);
+      if (!badge) continue;
+
+      // Update badge class
+      badge.className = `health-badge health-${info.status}`;
+      badge.title = buildTooltip(info);
+
+      // Update label text
+      const label = badge.querySelector('.health-label');
+      if (label) label.textContent = statusLabel(info.status);
+    }
+  }
+
+  /**
+   * Update the summary bar above the grid.
+   */
+  function updateSummary(summary) {
+    const summaryEl = document.getElementById('health-summary');
+    if (!summaryEl) return;
+
+    // Show the summary bar once we have data
+    if (summary.total > 0) {
+      summaryEl.style.display = '';
+    }
+
+    const onlineEl = document.getElementById('health-online-count');
+    const degradedEl = document.getElementById('health-degraded-count');
+    const offlineEl = document.getElementById('health-offline-count');
+    const lastCheckedEl = document.getElementById('health-last-checked');
+
+    if (onlineEl) onlineEl.textContent = summary.online || 0;
+    if (degradedEl) degradedEl.textContent = summary.degraded || 0;
+    if (offlineEl) offlineEl.textContent = summary.offline || 0;
+
+    if (lastCheckedEl) {
+      lastCheckedEl.textContent = `Last checked: ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  }
+
+  /**
+   * Fetch health statuses from the API and update the UI.
+   */
+  async function fetchHealthStatus() {
+    try {
+      const res = await fetch('/api/health-status');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.statuses) updateBadges(data.statuses);
+      if (data.summary) updateSummary(data.summary);
+    } catch {
+      // Silent fail — badges stay as-is, user is not disrupted
+    }
+  }
+
+  // Initial fetch (short delay for page to settle)
+  setTimeout(fetchHealthStatus, 1500);
+
+  // Recurring poll
+  setInterval(fetchHealthStatus, POLL_INTERVAL);
+})();
