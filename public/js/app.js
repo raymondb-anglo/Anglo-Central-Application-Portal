@@ -153,6 +153,91 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ---- Excel Export Buttons with Visual Feedback & Error Handling ----
+  document.querySelectorAll('.btn-export-excel').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (btn.classList.contains('exporting')) return;
+
+      const originalHtml = btn.innerHTML;
+      btn.classList.add('exporting');
+      btn.style.pointerEvents = 'none';
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span><span>Generating Excel...</span>';
+
+      try {
+        let exportUrl = btn.getAttribute('href');
+        // If on audit logs page, dynamically capture active form filters
+        const filterForm = document.getElementById('auditFilterForm');
+        if (filterForm && btn.getAttribute('data-export-type') === 'audit-logs') {
+          const formData = new FormData(filterForm);
+          const params = new URLSearchParams();
+          for (const [key, val] of formData.entries()) {
+            if (val && key !== 'limit') {
+              params.append(key, val);
+            }
+          }
+          const qs = params.toString();
+          exportUrl = '/admin/audit-logs/export' + (qs ? '?' + qs : '');
+        }
+
+        const res = await fetch(exportUrl, {
+          headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json' }
+        });
+
+        if (!res.ok) {
+          let errText = `Server returned status ${res.status}`;
+          try {
+            const errJson = await res.json();
+            if (errJson && errJson.error) errText = errJson.error;
+          } catch {
+            const text = await res.text();
+            if (text) errText = text;
+          }
+          throw new Error(errText);
+        }
+
+        // Extract filename from Content-Disposition if present
+        let filename = 'export.xlsx';
+        const disposition = res.headers.get('content-disposition');
+        if (disposition && disposition.includes('filename=')) {
+          const match = disposition.match(/filename="?([^";]+)"?/i);
+          if (match && match[1]) filename = match[1];
+        }
+
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(blobUrl);
+        }, 2000);
+
+        // Success state on button
+        btn.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><span class="text-success">Downloaded!</span>';
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('exporting');
+          btn.style.pointerEvents = '';
+        }, 2500);
+
+      } catch (err) {
+        console.error('[EXPORT] Failed to download Excel:', err);
+        btn.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i><span class="text-danger">Failed</span>';
+        alert('Failed to export Excel: ' + err.message);
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('exporting');
+          btn.style.pointerEvents = '';
+        }, 3000);
+      }
+    });
+  });
+
   // ---- Theme Toggle (Dark & Light Mode — Anglobot Reference) ----
   function getTheme() {
     return localStorage.getItem('portal_theme') || 'dark';

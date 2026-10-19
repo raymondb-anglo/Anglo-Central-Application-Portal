@@ -139,13 +139,18 @@ router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async 
       });
     } catch { /* audit should not block */ }
 
+    // Generate buffer & send download
+    const buffer = await workbook.xlsx.writeBuffer();
     const filename = `users-${new Date().toISOString().slice(0, 10)}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    await workbook.xlsx.write(res);
-    res.end();
+    res.setHeader('Content-Length', buffer.length);
+    res.send(Buffer.from(buffer));
   } catch (err) {
     console.error('[ADMIN] Error exporting users:', err.message);
+    if (req.headers.accept?.includes('application/json')) {
+      return res.status(500).json({ error: 'Export failed: ' + err.message });
+    }
     res.redirect('/admin/users?error=' + encodeURIComponent('Export failed: ' + err.message));
   }
 });

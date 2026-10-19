@@ -6,8 +6,8 @@
         <p class="admin-subtitle">System activity and audit trail — <%= total %> total entries</p>
       </div>
       <div class="admin-header-actions">
-        <a href="/admin/audit-logs/export?<%= filterQS.replace(/^&/, '') %>" class="btn btn-secondary-portal" title="Export filtered results to Excel">
-          <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to Excel
+        <a href="/admin/audit-logs/export?<%= filterQS.replace(/^&/, '') %>" id="exportAuditLogsBtn" class="btn btn-secondary-portal btn-export-excel" data-export-type="audit-logs" title="Export filtered results to Excel">
+          <i class="bi bi-file-earmark-spreadsheet me-1"></i><span class="btn-export-text">Export to Excel</span>
         </a>
       </div>
     </div>
