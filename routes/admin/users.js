@@ -55,6 +55,102 @@ function parseCSV(text) {
 }
 
 /**
+ * GET /admin/users/export — Export user list to Excel (.xlsx)
+ * Uses exceljs (same library as PGJ-Booking-System).
+ */
+router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), async (req, res) => {
+  try {
+    const ExcelJS = (await import('exceljs')).default;
+
+    // Fetch all users with their roles
+    const users = await db.queryRows(
+      `SELECT u.Id, u.Email, u.DisplayName, u.FirstName, u.LastName,
+              u.IsActive, u.CreatedAt, u.LastLoginAt,
+              STUFF((SELECT ', ' + r.Name FROM Roles r 
+                     INNER JOIN UserRoles ur ON ur.RoleId = r.Id 
+                     WHERE ur.UserId = u.Id 
+                     FOR XML PATH('')), 1, 2, '') AS RoleNames
+       FROM Users u
+       ORDER BY u.DisplayName ASC`
+    );
+
+    // Create workbook
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Anglo Central Application Portal';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Users', {
+      views: [{ state: 'frozen', ySplit: 1 }]
+    });
+
+    sheet.columns = [
+      { header: 'ID', key: 'Id', width: 8 },
+      { header: 'Display Name', key: 'DisplayName', width: 25 },
+      { header: 'First Name', key: 'FirstName', width: 18 },
+      { header: 'Last Name', key: 'LastName', width: 18 },
+      { header: 'Email', key: 'Email', width: 35 },
+      { header: 'Roles', key: 'Roles', width: 30 },
+      { header: 'Status', key: 'Status', width: 12 },
+      { header: 'Created At', key: 'CreatedAt', width: 22 },
+      { header: 'Last Login', key: 'LastLogin', width: 22 }
+    ];
+
+    // Style header row
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+    headerRow.height = 28;
+
+    // Add data rows
+    for (const u of users) {
+      sheet.addRow({
+        Id: u.Id,
+        DisplayName: u.DisplayName || '—',
+        FirstName: u.FirstName || '',
+        LastName: u.LastName || '',
+        Email: u.Email,
+        Roles: u.RoleNames || 'No roles',
+        Status: u.IsActive ? 'Active' : 'Inactive',
+        CreatedAt: u.CreatedAt ? new Date(u.CreatedAt) : null,
+        LastLogin: u.LastLoginAt ? new Date(u.LastLoginAt) : null
+      });
+    }
+
+    // Format date columns
+    sheet.getColumn('CreatedAt').numFmt = 'dd mmm yyyy, hh:mm';
+    sheet.getColumn('LastLogin').numFmt = 'dd mmm yyyy, hh:mm';
+
+    // Auto-filter
+    sheet.autoFilter = { from: 'A1', to: 'I1' };
+
+    // Footer info
+    const lastRow = sheet.rowCount + 2;
+    sheet.getCell(`A${lastRow}`).value = `Exported: ${new Date().toLocaleString()} | Total Users: ${users.length}`;
+    sheet.getCell(`A${lastRow}`).font = { italic: true, color: { argb: 'FF888888' } };
+
+    // Log the export
+    try {
+      await logAudit({
+        userId: req.user?.Id,
+        action: 'USERS_EXPORTED',
+        ipAddress: getClientIP(req),
+        details: `Exported ${users.length} user records to Excel`
+      });
+    } catch { /* audit should not block */ }
+
+    const filename = `users-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('[ADMIN] Error exporting users:', err.message);
+    res.redirect('/admin/users?error=' + encodeURIComponent('Export failed: ' + err.message));
+  }
+});
+
+/**
  * GET /admin/users/template — Download CSV template for bulk user import
  */
 router.get('/template', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), (req, res) => {

@@ -5,18 +5,70 @@
         <h1 class="admin-title"><i class="bi bi-journal-text me-2"></i>Audit Logs</h1>
         <p class="admin-subtitle">System activity and audit trail — <%= total %> total entries</p>
       </div>
+      <div class="admin-header-actions">
+        <a href="/admin/audit-logs/export?<%= filterQS.replace(/^&/, '') %>" class="btn btn-secondary-portal" title="Export filtered results to Excel">
+          <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to Excel
+        </a>
+      </div>
     </div>
 
     <% if (typeof error !== 'undefined' && error) { %>
       <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error %></span></div>
     <% } %>
 
+    <!-- Filter Bar -->
+    <div class="filter-panel">
+      <form method="GET" action="/admin/audit-logs" class="filter-form" id="auditFilterForm">
+        <input type="hidden" name="limit" value="<%= limit %>">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filter-action" class="filter-label">Action</label>
+            <select id="filter-action" name="action" class="filter-input">
+              <option value="">All Actions</option>
+              <% actions.forEach(a => { %>
+                <option value="<%= a %>" <%= filters.action === a ? 'selected' : '' %>><%= a %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-user" class="filter-label">User</label>
+            <input type="text" id="filter-user" name="user" class="filter-input" placeholder="Email or name..." value="<%= filters.user %>">
+          </div>
+          <div class="filter-group">
+            <label for="filter-app" class="filter-label">Application</label>
+            <select id="filter-app" name="application" class="filter-input">
+              <option value="">All Applications</option>
+              <% applications.forEach(a => { %>
+                <option value="<%= a %>" <%= filters.application === a ? 'selected' : '' %>><%= a %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-date-from" class="filter-label">From</label>
+            <input type="date" id="filter-date-from" name="dateFrom" class="filter-input" value="<%= filters.dateFrom %>">
+          </div>
+          <div class="filter-group">
+            <label for="filter-date-to" class="filter-label">To</label>
+            <input type="date" id="filter-date-to" name="dateTo" class="filter-input" value="<%= filters.dateTo %>">
+          </div>
+          <div class="filter-actions">
+            <button type="submit" class="btn btn-primary-portal btn-sm">
+              <i class="bi bi-funnel me-1"></i> Apply Filters
+            </button>
+            <a href="/admin/audit-logs" class="btn btn-secondary-portal btn-sm" title="Clear all filters">
+              <i class="bi bi-x-lg me-1"></i> Clear
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+
     <% if (logs && logs.length > 0) { %>
       <div class="table-container">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Timestamp</th>
+              <th>Date</th>
               <th>User</th>
               <th>Action</th>
               <th>Application</th>
@@ -32,7 +84,7 @@
                 </td>
                 <td><%= log.UserEmail || log.UserName || '—' %></td>
                 <td>
-                  <span class="action-tag action-<%= log.Action.toLowerCase().includes('login') ? 'login' : log.Action.toLowerCase().includes('created') || log.Action.toLowerCase().includes('activated') ? 'create' : log.Action.toLowerCase().includes('deleted') || log.Action.toLowerCase().includes('deactivated') ? 'danger' : 'default' %>">
+                  <span class="action-tag action-<%= log.Action.toLowerCase().includes('login') ? 'login' : log.Action.toLowerCase().includes('created') || log.Action.toLowerCase().includes('activated') ? 'create' : log.Action.toLowerCase().includes('deleted') || log.Action.toLowerCase().includes('deactivated') ? 'danger' : log.Action.toLowerCase().includes('export') ? 'export' : 'default' %>">
                     <%= log.Action %>
                   </span>
                 </td>
@@ -53,7 +105,7 @@
       <div class="table-pagination">
         <div class="table-pagination-left">
           <label for="audit-rpp" class="pagination-rpp-label">Rows per page:</label>
-          <select id="audit-rpp" class="pagination-rpp-select" data-base-url="/admin/audit-logs" aria-label="Rows per page">
+          <select id="audit-rpp" class="pagination-rpp-select" data-base-url="/admin/audit-logs" data-filter-qs="<%= filterQS %>" aria-label="Rows per page">
             <% allowedLimits.forEach(opt => { %>
               <option value="<%= opt %>" <%= opt === limit ? 'selected' : '' %>><%= opt %></option>
             <% }) %>
@@ -65,7 +117,7 @@
           </span>
           <nav class="pagination-actions" aria-label="Table navigation">
             <% if (page > 1) { %>
-              <a href="/admin/audit-logs?page=<%= page - 1 %>&limit=<%= limit %>" class="pagination-btn" aria-label="Previous page">
+              <a href="/admin/audit-logs?page=<%= page - 1 %>&limit=<%= limit %><%= filterQS %>" class="pagination-btn" aria-label="Previous page">
                 <i class="bi bi-chevron-left"></i>
               </a>
             <% } else { %>
@@ -73,7 +125,7 @@
             <% } %>
             <span class="pagination-info">Page <%= page %> of <%= totalPages %></span>
             <% if (page < totalPages) { %>
-              <a href="/admin/audit-logs?page=<%= page + 1 %>&limit=<%= limit %>" class="pagination-btn" aria-label="Next page">
+              <a href="/admin/audit-logs?page=<%= page + 1 %>&limit=<%= limit %><%= filterQS %>" class="pagination-btn" aria-label="Next page">
                 <i class="bi bi-chevron-right"></i>
               </a>
             <% } else { %>
@@ -86,7 +138,13 @@
       <div class="empty-state">
         <div class="empty-state-icon"><i class="bi bi-journal-text"></i></div>
         <h2 class="empty-state-title">No Audit Logs</h2>
-        <p class="empty-state-text">Activity will be recorded here as users interact with the portal.</p>
+        <p class="empty-state-text">
+          <% if (filters.action || filters.user || filters.dateFrom || filters.dateTo || filters.application) { %>
+            No results match your current filters. Try adjusting or <a href="/admin/audit-logs">clearing all filters</a>.
+          <% } else { %>
+            Activity will be recorded here as users interact with the portal.
+          <% } %>
+        </p>
       </div>
     <% } %>
   </div>

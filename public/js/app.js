@@ -143,11 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // When the user changes the "Rows per page" dropdown, navigate to
   // page 1 with the new limit. Resets to page 1 per Material Design
   // best practice (avoids broken offsets when limit changes).
+  // Also preserves any active filter parameters (data-filter-qs).
   document.querySelectorAll('.pagination-rpp-select').forEach(select => {
     select.addEventListener('change', () => {
       const baseUrl = select.getAttribute('data-base-url');
       const limit = select.value;
-      window.location.href = `${baseUrl}?page=1&limit=${limit}`;
+      const filterQS = select.getAttribute('data-filter-qs') || '';
+      window.location.href = `${baseUrl}?page=1&limit=${limit}${filterQS}`;
     });
   });
 
