@@ -120,3 +120,17 @@ CREATE TABLE [dbo].[sessions](
     [session] [nvarchar](max)  NOT NULL,
     [expires] [datetime]       NOT NULL
 );
+
+-- =====================================================
+-- 9. UserFavorites (Personalized pinned applications)
+-- =====================================================
+CREATE TABLE UserFavorites (
+    UserId        INT NOT NULL REFERENCES Users(Id) ON DELETE CASCADE,
+    ApplicationId INT NOT NULL REFERENCES ApplicationInformation(Id) ON DELETE CASCADE,
+    CreatedAt     DATETIME2 DEFAULT GETDATE(),
+    PRIMARY KEY (UserId, ApplicationId)
+);
+
+CREATE INDEX IX_UserFavorites_UserId ON UserFavorites(UserId);
+CREATE INDEX IX_UserFavorites_AppId ON UserFavorites(ApplicationId);
+

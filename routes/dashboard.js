@@ -34,10 +34,49 @@ router.get('/', requireAuth, async (req, res) => {
         .filter(c => c !== null && c !== '')
     )].sort();
 
+    // 1. Fetch user's pinned/favorite application IDs
+    let favoriteAppIds = [];
+    try {
+      const favRows = await db.queryRows(
+        'SELECT ApplicationId FROM UserFavorites WHERE UserId = @p0',
+        [userId]
+      );
+      favoriteAppIds = favRows.map(r => r.ApplicationId);
+    } catch (e) {
+      console.warn('[DASHBOARD] Could not load favorites:', e.message);
+    }
+
+    // 2. Fetch user's recent launches (top 6 apps)
+    let recentApps = [];
+    try {
+      const allowedAppIds = new Set(applications.map(a => a.Id));
+      const recentRows = await db.queryRows(
+        `SELECT TOP 10 l.ApplicationId, MAX(l.Timestamp) as LastLaunchedAt
+         FROM AuditLogs l
+         WHERE l.UserId = @p0 AND l.Action = 'APP_ACCESS' AND l.ApplicationId IS NOT NULL
+         GROUP BY l.ApplicationId
+         ORDER BY LastLaunchedAt DESC`,
+        [userId]
+      );
+
+      const appMap = new Map(applications.map(a => [a.Id, a]));
+      recentApps = recentRows
+        .filter(r => allowedAppIds.has(r.ApplicationId))
+        .slice(0, 6)
+        .map(r => ({
+          ...appMap.get(r.ApplicationId),
+          lastLaunchedAt: r.LastLaunchedAt
+        }));
+    } catch (e) {
+      console.warn('[DASHBOARD] Could not load recent launches:', e.message);
+    }
+
     res.render('dashboard', {
       layout: 'layout',
       title: 'Application Portal',
       applications,
+      favoriteAppIds,
+      recentApps,
       campuses,
       user: req.user
     });
@@ -47,6 +86,8 @@ router.get('/', requireAuth, async (req, res) => {
       layout: 'layout',
       title: 'Application Portal',
       applications: [],
+      favoriteAppIds: [],
+      recentApps: [],
       campuses: [],
       user: req.user,
       error: 'Failed to load applications. Please try again later.'

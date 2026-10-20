@@ -854,3 +854,118 @@ document.addEventListener('DOMContentLoaded', () => {
   // Recurring poll
   setInterval(fetchHealthStatus, POLL_INTERVAL);
 })();
+
+// ============================================================================
+// User Personalization: Favorites / Pinned Apps Controller
+// ============================================================================
+(function initFavorites() {
+  document.addEventListener('click', async function(e) {
+    const favBtn = e.target.closest('.app-favorite-btn');
+    if (!favBtn) return;
+
+    // Prevent navigation to the application launch URL
+    e.preventDefault();
+    e.stopPropagation();
+
+    const appId = favBtn.getAttribute('data-app-id');
+    if (!appId) return;
+
+    // Pulse animation
+    favBtn.classList.add('toggling');
+    setTimeout(() => favBtn.classList.remove('toggling'), 400);
+
+    const isCurrentlyActive = favBtn.classList.contains('active');
+    const newActiveState = !isCurrentlyActive;
+
+    // Optimistically update ALL buttons for this app ID on the page (both pinned & all apps)
+    const matchingBtns = document.querySelectorAll(`.app-favorite-btn[data-app-id="${appId}"]`);
+    matchingBtns.forEach(btn => {
+      if (newActiveState) {
+        btn.classList.add('active');
+        btn.setAttribute('title', 'Remove from favorites');
+        btn.setAttribute('aria-label', 'Remove from favorites');
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.className = 'bi bi-star-fill';
+        }
+      } else {
+        btn.classList.remove('active');
+        btn.setAttribute('title', 'Pin to favorites');
+        btn.setAttribute('aria-label', 'Pin to favorites');
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.className = 'bi bi-star';
+        }
+      }
+    });
+
+    // Handle Pinned Section DOM updates
+    const pinnedSection = document.getElementById('pinnedSection');
+    const pinnedGrid = document.getElementById('pinnedAppGrid');
+    const pinnedBadge = document.getElementById('pinnedCountBadge');
+
+    if (pinnedGrid && pinnedSection) {
+      if (newActiveState) {
+        // Clone from the main grid into the pinned grid if not already there
+        const existingInPinned = pinnedGrid.querySelector(`.app-card-wrapper[data-app-id="${appId}"]`);
+        if (!existingInPinned) {
+          const mainCardWrapper = document.querySelector(`#app-grid .app-card-wrapper[data-app-id="${appId}"]`);
+          if (mainCardWrapper) {
+            const clone = mainCardWrapper.cloneNode(true);
+            clone.setAttribute('data-pinned', 'true');
+            const clonedBtn = clone.querySelector('.app-favorite-btn');
+            if (clonedBtn) {
+              clonedBtn.classList.add('active');
+              const icon = clonedBtn.querySelector('i');
+              if (icon) icon.className = 'bi bi-star-fill';
+            }
+            pinnedGrid.appendChild(clone);
+          }
+        }
+      } else {
+        // Remove from pinned grid
+        const pinnedWrapper = pinnedGrid.querySelector(`.app-card-wrapper[data-app-id="${appId}"]`);
+        if (pinnedWrapper) {
+          pinnedWrapper.remove();
+        }
+      }
+
+      // Update pinned count & section visibility
+      const currentPinnedCount = pinnedGrid.querySelectorAll('.app-card-wrapper').length;
+      if (pinnedBadge) pinnedBadge.textContent = currentPinnedCount;
+      if (currentPinnedCount > 0) {
+        pinnedSection.style.display = '';
+      } else {
+        pinnedSection.style.display = 'none';
+      }
+    }
+
+    // Send async request to backend
+    try {
+      const res = await fetch('/api/favorites/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: parseInt(appId, 10) })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Server error');
+      }
+    } catch (err) {
+      console.error('[FAVORITES] Toggle failed:', err);
+      // Revert buttons on error
+      matchingBtns.forEach(btn => {
+        if (isCurrentlyActive) {
+          btn.classList.add('active');
+          const icon = btn.querySelector('i');
+          if (icon) icon.className = 'bi bi-star-fill';
+        } else {
+          btn.classList.remove('active');
+          const icon = btn.querySelector('i');
+          if (icon) icon.className = 'bi bi-star';
+        }
+      });
+    }
+  });
+})();
+

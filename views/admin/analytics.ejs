@@ -1,0 +1,707 @@
+<div class="admin-page analytics-page">
+  <div class="container py-4">
+    <!-- Breadcrumb & Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="/"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
+            <li class="breadcrumb-item">Admin</li>
+            <li class="breadcrumb-item active" aria-current="page">Usage Analytics</li>
+          </ol>
+        </nav>
+        <h1 class="h3 fw-bold mb-1 text-gradient-primary">
+          <i class="bi bi-graph-up-arrow me-2"></i>Usage Analytics & Launch Visualizations
+        </h1>
+        <p class="text-muted small mb-0">
+          Real-time portal engagement, application adoption, campus distributions, and hourly activity profiles.
+        </p>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <!-- Campus Selector -->
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" id="campusFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-building"></i>
+            <span id="selectedCampusLabel">All Campuses</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="campusFilterDropdown" id="campusFilterMenu">
+            <li><a class="dropdown-item active" href="#" data-campus="all">All Campuses</a></li>
+            <% if (analytics.campuses && analytics.campuses.length > 0) { %>
+              <% analytics.campuses.forEach(campus => { %>
+                <li><a class="dropdown-item" href="#" data-campus="<%= campus %>"><%= campus %></a></li>
+              <% }) %>
+            <% } %>
+            <li><a class="dropdown-item" href="#" data-campus="global"><i class="bi bi-globe me-1"></i>Global / Central</a></li>
+          </ul>
+        </div>
+
+        <!-- Time Range Selector -->
+        <div class="btn-group btn-group-sm" role="group" aria-label="Timeframe filter" id="timeframeGroup">
+          <button type="button" class="btn btn-outline-primary" data-days="7">7 Days</button>
+          <button type="button" class="btn btn-outline-primary active" data-days="30">30 Days</button>
+          <button type="button" class="btn btn-outline-primary" data-days="90">90 Days</button>
+          <button type="button" class="btn btn-outline-primary" data-days="0">All Time</button>
+        </div>
+
+        <!-- Refresh button -->
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshAnalyticsBtn" title="Refresh metrics">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4" id="kpiCardsRow">
+      <!-- Total Period Launches -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card analytics-kpi-card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center justify-content-between p-3">
+            <div>
+              <span class="text-muted small fw-medium text-uppercase d-block mb-1">Period Launches</span>
+              <h2 class="h3 fw-bold mb-0" id="kpiPeriodLaunches"><%= analytics.kpis.totalPeriod.toLocaleString() %></h2>
+              <span class="small text-muted mt-1 d-block">
+                <i class="bi bi-database me-1"></i><span id="kpiAllTimeLaunches"><%= analytics.kpis.allTimeTotal.toLocaleString() %></span> all-time
+              </span>
+            </div>
+            <div class="kpi-icon-pill kpi-icon-primary">
+              <i class="bi bi-rocket-takeoff-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Users -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card analytics-kpi-card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center justify-content-between p-3">
+            <div>
+              <span class="text-muted small fw-medium text-uppercase d-block mb-1">Active Users</span>
+              <h2 class="h3 fw-bold mb-0" id="kpiActiveUsers"><%= analytics.kpis.activeUsers.toLocaleString() %></h2>
+              <span class="small text-muted mt-1 d-block">
+                <i class="bi bi-grid-fill me-1"></i><span id="kpiUniqueApps"><%= analytics.kpis.uniqueAppsUsed %></span> apps accessed
+              </span>
+            </div>
+            <div class="kpi-icon-pill kpi-icon-success">
+              <i class="bi bi-people-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Application -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card analytics-kpi-card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center justify-content-between p-3">
+            <div class="overflow-hidden pe-2">
+              <span class="text-muted small fw-medium text-uppercase d-block mb-1">Most Popular App</span>
+              <h2 class="h5 fw-bold mb-0 text-truncate" id="kpiTopAppName" title="<%= analytics.kpis.topApp ? analytics.kpis.topApp.Application : 'None' %>">
+                <%= analytics.kpis.topApp ? analytics.kpis.topApp.Application : 'No activity' %>
+              </h2>
+              <span class="small text-muted mt-1 d-block text-truncate" id="kpiTopAppMeta">
+                <% if (analytics.kpis.topApp) { %>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1"><%= analytics.kpis.topApp.Campus || 'Global' %></span>
+                  <strong><%= analytics.kpis.topApp.LaunchCount %></strong> launches
+                <% } else { %>
+                  —
+                <% } %>
+              </span>
+            </div>
+            <div class="kpi-icon-pill kpi-icon-warning">
+              <i class="bi bi-trophy-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Peak Activity Hour -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card analytics-kpi-card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center justify-content-between p-3">
+            <div>
+              <span class="text-muted small fw-medium text-uppercase d-block mb-1">Peak Launch Time</span>
+              <h2 class="h4 fw-bold mb-0" id="kpiPeakHour">
+                <% if (analytics.kpis.peakHour) { %>
+                  <%= analytics.kpis.peakHour.PeakHour.toString().padStart(2, '0') %>:00 - <%= ((analytics.kpis.peakHour.PeakHour + 1) % 24).toString().padStart(2, '0') %>:00
+                <% } else { %>
+                  —
+                <% } %>
+              </h2>
+              <span class="small text-muted mt-1 d-block" id="kpiPeakHourCount">
+                <% if (analytics.kpis.peakHour) { %>
+                  <i class="bi bi-fire text-danger me-1"></i><%= analytics.kpis.peakHour.LaunchCount %> peak launches
+                <% } else { %>
+                  No launches yet
+                <% } %>
+              </span>
+            </div>
+            <div class="kpi-icon-pill kpi-icon-info">
+              <i class="bi bi-clock-history"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1: Timeline & Campus Distribution -->
+    <div class="row g-4 mb-4">
+      <!-- Launch Trends Timeline -->
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm h-100 analytics-chart-card">
+          <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 px-3 pb-0">
+            <div>
+              <h5 class="card-title fw-bold mb-0">
+                <i class="bi bi-activity text-primary me-2"></i>Launch Activity Trend
+              </h5>
+              <small class="text-muted">Daily launches over time</small>
+            </div>
+            <span class="badge bg-light text-dark border" id="timelineBadge">Daily Total</span>
+          </div>
+          <div class="card-body p-3">
+            <div class="chart-container" style="position: relative; height: 280px; width: 100%;">
+              <canvas id="timelineChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campus Distribution -->
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100 analytics-chart-card">
+          <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 px-3 pb-0">
+            <div>
+              <h5 class="card-title fw-bold mb-0">
+                <i class="bi bi-pie-chart text-info me-2"></i>Campus Breakdown
+              </h5>
+              <small class="text-muted">Launches grouped by campus</small>
+            </div>
+          </div>
+          <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+            <div class="chart-container" style="position: relative; height: 240px; width: 100%;">
+              <canvas id="campusChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2: Top 10 Applications & 24-Hour Profile -->
+    <div class="row g-4 mb-4">
+      <!-- Top 10 Apps -->
+      <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm h-100 analytics-chart-card">
+          <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 px-3 pb-0">
+            <div>
+              <h5 class="card-title fw-bold mb-0">
+                <i class="bi bi-bar-chart-steps text-success me-2"></i>Top 10 Applications
+              </h5>
+              <small class="text-muted">Ranked by launch volume</small>
+            </div>
+          </div>
+          <div class="card-body p-3">
+            <div class="chart-container" style="position: relative; height: 320px; width: 100%;">
+              <canvas id="topAppsChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hourly Profile -->
+      <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm h-100 analytics-chart-card">
+          <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 px-3 pb-0">
+            <div>
+              <h5 class="card-title fw-bold mb-0">
+                <i class="bi bi-clock text-warning me-2"></i>24-Hour Activity Profile
+              </h5>
+              <small class="text-muted">Portal traffic by hour of day</small>
+            </div>
+          </div>
+          <div class="card-body p-3">
+            <div class="chart-container" style="position: relative; height: 320px; width: 100%;">
+              <canvas id="hourlyChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables Row: Top Users & Live Launch Stream -->
+    <div class="row g-4">
+      <!-- Top Users -->
+      <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2">
+            <h5 class="card-title fw-bold mb-0">
+              <i class="bi bi-person-check text-primary me-2"></i>Most Active Portal Users
+            </h5>
+            <small class="text-muted">Top users launching applications</small>
+          </div>
+          <div class="card-body p-0">
+            <div class="list-group list-group-flush" id="topUsersList">
+              <% if (analytics.topUsers && analytics.topUsers.length > 0) { %>
+                <% analytics.topUsers.forEach((u, idx) => { %>
+                  <div class="list-group-item d-flex align-items-center justify-content-between px-3 py-2 border-0 border-bottom">
+                    <div class="d-flex align-items-center gap-3 overflow-hidden">
+                      <span class="user-rank-badge"><%= idx + 1 %></span>
+                      <% if (u.ProfilePicture) { %>
+                        <img src="<%= u.ProfilePicture %>" alt="" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
+                      <% } else { %>
+                        <div class="user-avatar-placeholder" style="width: 34px; height: 34px; font-size: 14px;">
+                          <i class="bi bi-person-fill"></i>
+                        </div>
+                      <% } %>
+                      <div class="text-truncate">
+                        <div class="fw-semibold text-truncate small"><%= u.DisplayName || u.Email %></div>
+                        <div class="text-muted extra-small text-truncate"><%= u.Email %></div>
+                      </div>
+                    </div>
+                    <div class="text-end ps-2 flex-shrink-0">
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><%= u.LaunchCount %> launches</span>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="p-4 text-center text-muted small">No active users recorded in this period.</div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Launch Stream -->
+      <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 px-3 pb-2">
+            <div>
+              <h5 class="card-title fw-bold mb-0">
+                <i class="bi bi-broadcast text-danger me-2"></i>Recent Launch Activity
+              </h5>
+              <small class="text-muted">Latest real-time application accesses</small>
+            </div>
+            <a href="/admin/audit-logs?action=APP_ACCESS" class="btn btn-sm btn-link text-decoration-none">
+              View Audit Logs <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 extra-small-table">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-3">User</th>
+                    <th>Application</th>
+                    <th>Campus</th>
+                    <th>IP Address</th>
+                    <th class="pe-3 text-end">Time</th>
+                  </tr>
+                </thead>
+                <tbody id="recentLaunchesBody">
+                  <% if (analytics.recentLaunches && analytics.recentLaunches.length > 0) { %>
+                    <% analytics.recentLaunches.forEach(launch => { %>
+                      <tr>
+                        <td class="ps-3">
+                          <span class="fw-semibold"><%= launch.UserName %></span>
+                        </td>
+                        <td>
+                          <i class="bi bi-<%= launch.AppIcon || 'app-indicator' %> text-primary me-1"></i>
+                          <span><%= launch.AppName || 'Unknown App' %></span>
+                        </td>
+                        <td>
+                          <span class="badge bg-secondary-subtle text-secondary border">
+                            <%= launch.AppCampus || 'Global' %>
+                          </span>
+                        </td>
+                        <td>
+                          <code class="text-muted"><%= launch.IPAddress || '—' %></code>
+                        </td>
+                        <td class="pe-3 text-end text-muted">
+                          <%= new Date(launch.Timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-muted">No recent launch activity found.</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Initial Analytics Data Payload -->
+<script id="initialAnalyticsData" type="application/json">
+  <%- JSON.stringify(analytics) %>
+</script>
+
+<!-- Load Chart.js from CDN (allowed by Helmet CSP) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<!-- Analytics Controller Script -->
+<script>
+(function() {
+  let initialData = {};
+  try {
+    const raw = document.getElementById('initialAnalyticsData');
+    if (raw) initialData = JSON.parse(raw.textContent);
+  } catch (e) {
+    console.error('Failed to parse analytics payload:', e);
+  }
+
+  // Active filter state
+  let currentDays = initialData.period ? initialData.period.days : 30;
+  let currentCampus = initialData.period ? initialData.period.campus : 'all';
+
+  // Chart instances
+  let timelineChartInstance = null;
+  let campusChartInstance = null;
+  let topAppsChartInstance = null;
+  let hourlyChartInstance = null;
+
+  // Color palette (harmonious with Anglo theme)
+  const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+  const getGridColor = () => isDark() ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+  const getTextColor = () => isDark() ? '#cbd5e1' : '#475569';
+
+  const palette = [
+    '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ec4899',
+    '#8b5cf6', '#06b6d4', '#14b8a6', '#f97316', '#64748b'
+  ];
+
+  // Initialize Timeline Chart
+  function initTimelineChart(timeline) {
+    const ctx = document.getElementById('timelineChart');
+    if (!ctx) return;
+
+    const labels = (timeline || []).map(t => {
+      const d = new Date(t.Date);
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    });
+    const data = (timeline || []).map(t => t.Count);
+
+    if (timelineChartInstance) timelineChartInstance.destroy();
+
+    timelineChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels.length > 0 ? labels : ['No data'],
+        datasets: [{
+          label: 'Launches',
+          data: data.length > 0 ? data : [0],
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.15)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#6366f1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            padding: 10,
+            cornerRadius: 8
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: getGridColor() },
+            ticks: { color: getTextColor(), maxTicksLimit: 12 }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: getGridColor() },
+            ticks: { color: getTextColor(), precision: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  // Initialize Campus Chart
+  function initCampusChart(campusDist) {
+    const ctx = document.getElementById('campusChart');
+    if (!ctx) return;
+
+    const labels = (campusDist || []).map(c => c.Campus);
+    const data = (campusDist || []).map(c => c.LaunchCount);
+
+    if (campusChartInstance) campusChartInstance.destroy();
+
+    campusChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels.length > 0 ? labels : ['No data'],
+        datasets: [{
+          data: data.length > 0 ? data : [1],
+          backgroundColor: palette.slice(0, Math.max(labels.length, 1)),
+          borderWidth: 2,
+          borderColor: isDark() ? '#1e293b' : '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: getTextColor(), boxWidth: 12, padding: 12, font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // Initialize Top Apps Chart
+  function initTopAppsChart(topApps) {
+    const ctx = document.getElementById('topAppsChart');
+    if (!ctx) return;
+
+    const labels = (topApps || []).map(a => `${a.Application} (${a.Campus || 'Global'})`);
+    const data = (topApps || []).map(a => a.LaunchCount);
+
+    if (topAppsChartInstance) topAppsChartInstance.destroy();
+
+    topAppsChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels.length > 0 ? labels : ['No data'],
+        datasets: [{
+          label: 'Launches',
+          data: data.length > 0 ? data : [0],
+          backgroundColor: '#10b981',
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: getGridColor() },
+            ticks: { color: getTextColor(), precision: 0 }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: getTextColor(), font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // Initialize Hourly Profile Chart
+  function initHourlyChart(hourly) {
+    const ctx = document.getElementById('hourlyChart');
+    if (!ctx) return;
+
+    const labels = (hourly || []).map(h => h.label);
+    const data = (hourly || []).map(h => h.count);
+
+    if (hourlyChartInstance) hourlyChartInstance.destroy();
+
+    hourlyChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Launches',
+          data: data,
+          backgroundColor: '#f59e0b',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              color: getTextColor(),
+              callback: function(val, index) {
+                // Show every 3 hours for clean label spacing
+                return index % 3 === 0 ? labels[index] : '';
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: getGridColor() },
+            ticks: { color: getTextColor(), precision: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  // Render initial charts
+  if (initialData) {
+    initTimelineChart(initialData.timeline);
+    initCampusChart(initialData.campusDistribution);
+    initTopAppsChart(initialData.topApps);
+    initHourlyChart(initialData.hourlyDistribution);
+  }
+
+  // Fetch updated data via AJAX
+  async function refreshData() {
+    const refreshBtn = document.getElementById('refreshAnalyticsBtn');
+    if (refreshBtn) refreshBtn.classList.add('spinning');
+
+    try {
+      const res = await fetch(`/admin/analytics/data?days=${currentDays}&campus=${encodeURIComponent(currentCampus)}`);
+      const json = await res.json();
+      if (!json.success || !json.data) throw new Error(json.error || 'Failed to fetch data');
+
+      const data = json.data;
+
+      // Update KPIs
+      document.getElementById('kpiPeriodLaunches').textContent = data.kpis.totalPeriod.toLocaleString();
+      document.getElementById('kpiAllTimeLaunches').textContent = data.kpis.allTimeTotal.toLocaleString();
+      document.getElementById('kpiActiveUsers').textContent = data.kpis.activeUsers.toLocaleString();
+      document.getElementById('kpiUniqueApps').textContent = data.kpis.uniqueAppsUsed;
+
+      if (data.kpis.topApp) {
+        document.getElementById('kpiTopAppName').textContent = data.kpis.topApp.Application;
+        document.getElementById('kpiTopAppName').title = data.kpis.topApp.Application;
+        document.getElementById('kpiTopAppMeta').innerHTML = `
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">${data.kpis.topApp.Campus || 'Global'}</span>
+          <strong>${data.kpis.topApp.LaunchCount}</strong> launches
+        `;
+      } else {
+        document.getElementById('kpiTopAppName').textContent = 'No activity';
+        document.getElementById('kpiTopAppMeta').textContent = '—';
+      }
+
+      if (data.kpis.peakHour) {
+        const nextHour = (data.kpis.peakHour.PeakHour + 1) % 24;
+        document.getElementById('kpiPeakHour').textContent =
+          `${data.kpis.peakHour.PeakHour.toString().padStart(2, '0')}:00 - ${nextHour.toString().padStart(2, '0')}:00`;
+        document.getElementById('kpiPeakHourCount').innerHTML = `
+          <i class="bi bi-fire text-danger me-1"></i>${data.kpis.peakHour.LaunchCount} peak launches
+        `;
+      } else {
+        document.getElementById('kpiPeakHour').textContent = '—';
+        document.getElementById('kpiPeakHourCount').textContent = 'No launches yet';
+      }
+
+      // Update charts
+      initTimelineChart(data.timeline);
+      initCampusChart(data.campusDistribution);
+      initTopAppsChart(data.topApps);
+      initHourlyChart(data.hourlyDistribution);
+
+      // Update Top Users list
+      const usersListEl = document.getElementById('topUsersList');
+      if (usersListEl) {
+        if (data.topUsers && data.topUsers.length > 0) {
+          usersListEl.innerHTML = data.topUsers.map((u, idx) => `
+            <div class="list-group-item d-flex align-items-center justify-content-between px-3 py-2 border-0 border-bottom">
+              <div class="d-flex align-items-center gap-3 overflow-hidden">
+                <span class="user-rank-badge">${idx + 1}</span>
+                ${u.ProfilePicture ? `<img src="${u.ProfilePicture}" alt="" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">` : `
+                  <div class="user-avatar-placeholder" style="width: 34px; height: 34px; font-size: 14px;">
+                    <i class="bi bi-person-fill"></i>
+                  </div>
+                `}
+                <div class="text-truncate">
+                  <div class="fw-semibold text-truncate small">${u.DisplayName || u.Email}</div>
+                  <div class="text-muted extra-small text-truncate">${u.Email}</div>
+                </div>
+              </div>
+              <div class="text-end ps-2 flex-shrink-0">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">${u.LaunchCount} launches</span>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          usersListEl.innerHTML = '<div class="p-4 text-center text-muted small">No active users recorded in this period.</div>';
+        }
+      }
+
+      // Update Recent Launches table
+      const recentBody = document.getElementById('recentLaunchesBody');
+      if (recentBody) {
+        if (data.recentLaunches && data.recentLaunches.length > 0) {
+          recentBody.innerHTML = data.recentLaunches.map(launch => `
+            <tr>
+              <td class="ps-3"><span class="fw-semibold">${launch.UserName}</span></td>
+              <td>
+                <i class="bi bi-${launch.AppIcon || 'app-indicator'} text-primary me-1"></i>
+                <span>${launch.AppName || 'Unknown App'}</span>
+              </td>
+              <td><span class="badge bg-secondary-subtle text-secondary border">${launch.AppCampus || 'Global'}</span></td>
+              <td><code class="text-muted">${launch.IPAddress || '—'}</code></td>
+              <td class="pe-3 text-end text-muted">
+                ${new Date(launch.Timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          recentBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No recent launch activity found.</td></tr>';
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update analytics:', err);
+    } finally {
+      if (refreshBtn) refreshBtn.classList.remove('spinning');
+    }
+  }
+
+  // Bind timeframe filter buttons
+  document.querySelectorAll('#timeframeGroup button').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#timeframeGroup button').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentDays = parseInt(this.getAttribute('data-days'), 10);
+      refreshData();
+    });
+  });
+
+  // Bind campus filter dropdown
+  document.querySelectorAll('#campusFilterMenu a').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('#campusFilterMenu a').forEach(a => a.classList.remove('active'));
+      this.classList.add('active');
+      currentCampus = this.getAttribute('data-campus');
+      document.getElementById('selectedCampusLabel').textContent = this.textContent.trim();
+      refreshData();
+    });
+  });
+
+  // Bind refresh button
+  const refreshBtn = document.getElementById('refreshAnalyticsBtn');
+  if (refreshBtn) refreshBtn.addEventListener('click', refreshData);
+
+  // Re-theme charts when theme toggles
+  window.addEventListener('themeChanged', () => {
+    if (initialData) {
+      refreshData();
+    }
+  });
+})();
+</script>

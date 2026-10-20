@@ -86,6 +86,15 @@ router.get('/', requireAuth, async (req, res) => {
       });
       items.push({
         type: 'page',
+        title: 'Usage Analytics',
+        subtitle: 'Application launch charts, peak hours, and usage trends',
+        icon: 'graph-up',
+        url: '/admin/analytics',
+        category: 'Admin Tools',
+        keywords: 'admin analytics usage statistics charts graphs launches trends metrics visual'
+      });
+      items.push({
+        type: 'page',
         title: 'Audit Logs',
         subtitle: 'Security audit trail, activity filters, and Excel exports',
         icon: 'journal-text',

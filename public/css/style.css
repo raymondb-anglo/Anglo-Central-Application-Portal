@@ -3350,3 +3350,294 @@ small.text-muted,
   }
 }
 
+/* ==========================================================================
+   User Personalization: Pinned Favorites & Recent Launches
+   ========================================================================== */
+
+/* App Card Wrapper */
+.app-card-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.app-card-wrapper .app-card {
+  width: 100%;
+}
+
+/* App Favorite Star Button */
+.app-favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  outline: none;
+}
+
+[data-theme="light"] .app-favorite-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #94a3b8;
+}
+
+.app-favorite-btn:hover {
+  color: #f59e0b;
+  transform: scale(1.15);
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.app-favorite-btn.active {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.app-favorite-btn.active i {
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.app-favorite-btn.toggling {
+  animation: starPulse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes starPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35) rotate(15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Adjust health badge position if favorite button is present */
+.app-card-wrapper .health-badge {
+  right: 48px;
+}
+
+/* Section Headings */
+.section-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Pinned Grid */
+.pinned-grid {
+  margin-bottom: 2rem;
+}
+
+/* Recent Launches Strip */
+.recent-launches-section {
+  padding: 0.75rem 0;
+}
+
+.recent-launches-scroll {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.1rem 0.65rem;
+  scrollbar-width: thin;
+}
+
+.recent-launches-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.recent-launches-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+.recent-launch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.recent-launch-chip:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: var(--color-primary-light);
+}
+
+.recent-launch-chip .chip-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.recent-launch-chip .chip-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.recent-launch-chip .chip-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recent-launch-chip .chip-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.recent-launch-chip .chip-arrow {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.recent-launch-chip:hover .chip-arrow {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Admin Usage Analytics & Visualizations
+   ========================================================================== */
+.analytics-page {
+  animation: fadeIn 0.25s ease-out;
+}
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .text-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #7e22ce 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.analytics-kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analytics-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.kpi-icon-pill {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.45rem;
+  flex-shrink: 0;
+}
+
+.kpi-icon-primary {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+
+.kpi-icon-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.kpi-icon-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.kpi-icon-info {
+  background: rgba(6, 182, 212, 0.12);
+  color: #06b6d4;
+}
+
+.analytics-chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.user-rank-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.list-group-item:first-child .user-rank-badge {
+  background: #f59e0b;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+.list-group-item:nth-child(2) .user-rank-badge {
+  background: #94a3b8;
+  color: #ffffff;
+  border-color: #64748b;
+}
+
+.list-group-item:nth-child(3) .user-rank-badge {
+  background: #b45309;
+  color: #ffffff;
+  border-color: #92400e;
+}
+
+.extra-small-table {
+  font-size: 0.82rem;
+}
+
+.spinning i {
+  animation: spinAnim 0.75s linear infinite;
+}
+
+@keyframes spinAnim {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

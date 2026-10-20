@@ -24,9 +24,11 @@ import adminApplicationsRoutes from './routes/admin/applications.js';
 import adminUsersRoutes from './routes/admin/users.js';
 import adminRolesRoutes from './routes/admin/roles.js';
 import adminAuditLogsRoutes from './routes/admin/auditLogs.js';
+import adminAnalyticsRoutes from './routes/admin/analytics.js';
 import ssoApiRoutes from './routes/api/sso.js';
 import healthStatusRoutes from './routes/api/healthStatus.js';
 import quickSearchRoutes from './routes/api/quickSearch.js';
+import favoritesApiRoutes from './routes/api/favorites.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { isSSOConfigured } from './utils/sso.js';
 import { startHealthChecker } from './utils/healthCheck.js';
@@ -116,10 +118,12 @@ app.use('/admin/applications', adminApplicationsRoutes);
 app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/roles', adminRolesRoutes);
 app.use('/admin/audit-logs', adminAuditLogsRoutes);
+app.use('/admin/analytics', adminAnalyticsRoutes);
 app.use('/api', apiLimiter);
 app.use('/api/sso', ssoApiRoutes);
 app.use('/api/health-status', healthStatusRoutes);
 app.use('/api/quick-search', quickSearchRoutes);
+app.use('/api/favorites', favoritesApiRoutes);
 
 // ---- Health check ----
 app.get('/health', async (req, res) => {
