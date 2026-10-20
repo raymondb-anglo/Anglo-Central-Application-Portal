@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { logAudit, getClientIP } from '../../utils/auditLog.js';
 import db from '../../db.js';
 import { exportLimiter } from '../../middleware/rateLimiter.js';
+import { getClientTimeZone, formatExportDateTime, formatLocalDate } from '../../utils/helpers.js';
 
 const router = Router();
 
@@ -246,7 +247,10 @@ router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), export
     if (filters.dateTo) activeFilters.push(`To: ${filters.dateTo}`);
     if (filters.application) activeFilters.push(`App: ${filters.application}`);
 
-    sheet.getCell(`A${lastRow}`).value = `Exported: ${new Date().toLocaleString()} | Records: ${logs.length}${activeFilters.length > 0 ? ' | Filters: ' + activeFilters.join(', ') : ''}`;
+    const clientTz = getClientTimeZone(req);
+    const exportTimeStr = formatExportDateTime(new Date(), clientTz);
+
+    sheet.getCell(`A${lastRow}`).value = `Exported: ${exportTimeStr} | Records: ${logs.length}${activeFilters.length > 0 ? ' | Filters: ' + activeFilters.join(', ') : ''}`;
     sheet.getCell(`A${lastRow}`).font = { italic: true, color: { argb: 'FF888888' } };
 
     // Audit the export action
@@ -261,7 +265,8 @@ router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), export
 
     // Generate buffer & send download
     const buffer = await workbook.xlsx.writeBuffer();
-    const filename = `audit-logs-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const localDateStr = formatLocalDate(new Date(), clientTz);
+    const filename = `audit-logs-${localDateStr}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', buffer.length);

@@ -6,6 +6,7 @@ import { logAudit, getClientIP } from '../../utils/auditLog.js';
 import db from '../../db.js';
 import { exportLimiter } from '../../middleware/rateLimiter.js';
 import { userSchema, validateBody } from '../../middleware/validators.js';
+import { getClientTimeZone, formatExportDateTime, formatLocalDate } from '../../utils/helpers.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -128,7 +129,10 @@ router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), export
 
     // Footer info
     const lastRow = sheet.rowCount + 2;
-    sheet.getCell(`A${lastRow}`).value = `Exported: ${new Date().toLocaleString()} | Total Users: ${users.length}`;
+    const clientTz = getClientTimeZone(req);
+    const exportTimeStr = formatExportDateTime(new Date(), clientTz);
+
+    sheet.getCell(`A${lastRow}`).value = `Exported: ${exportTimeStr} | Total Users: ${users.length}`;
     sheet.getCell(`A${lastRow}`).font = { italic: true, color: { argb: 'FF888888' } };
 
     // Log the export
@@ -143,7 +147,8 @@ router.get('/export', requireAuth, requireRole('PortalAdmin', 'ITAdmin'), export
 
     // Generate buffer & send download
     const buffer = await workbook.xlsx.writeBuffer();
-    const filename = `users-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const localDateStr = formatLocalDate(new Date(), clientTz);
+    const filename = `users-${localDateStr}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', buffer.length);

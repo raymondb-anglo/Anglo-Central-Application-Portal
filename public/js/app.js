@@ -153,6 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ---- Synchronize client device timezone with portal ----
+  try {
+    const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (clientTz) {
+      document.cookie = `app_tz=${encodeURIComponent(clientTz)};path=/;max-age=31536000;SameSite=Lax`;
+    }
+  } catch { /* ignore */ }
+
   // ---- Excel Export Buttons with Visual Feedback & Error Handling ----
   document.querySelectorAll('.btn-export-excel').forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -180,8 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
           exportUrl = '/admin/audit-logs/export' + (qs ? '?' + qs : '');
         }
 
+        // Attach user device's local timezone so exported timestamp accurately matches device
+        const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Bangkok';
+        const urlObj = new URL(exportUrl, window.location.origin);
+        urlObj.searchParams.set('tz', clientTz);
+        exportUrl = urlObj.pathname + urlObj.search;
+
         const res = await fetch(exportUrl, {
-          headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json' }
+          headers: {
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json',
+            'X-Timezone': clientTz
+          }
         });
 
         if (!res.ok) {

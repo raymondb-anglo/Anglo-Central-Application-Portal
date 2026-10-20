@@ -1,4 +1,10 @@
 import 'dotenv/config';
+
+// Ensure server defaults to school's local timezone (UTC+7 Asia/Bangkok)
+if (!process.env.TZ) {
+  process.env.TZ = process.env.APP_TIMEZONE || 'Asia/Bangkok';
+}
+
 import express from 'express';
 import expressLayouts from 'express-ejs-layouts';
 import session from 'express-session';
