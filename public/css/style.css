@@ -3354,16 +3354,6 @@ small.text-muted,
    User Personalization: Pinned Favorites & Recent Launches
    ========================================================================== */
 
-/* App Card Wrapper */
-.app-card-wrapper {
-  position: relative;
-  display: flex;
-}
-
-.app-card-wrapper .app-card {
-  width: 100%;
-}
-
 /* App Favorite Star Button */
 .app-favorite-btn {
   position: absolute;
@@ -3421,7 +3411,7 @@ small.text-muted,
 }
 
 /* Adjust health badge position if favorite button is present */
-.app-card-wrapper .health-badge {
+.app-card .health-badge {
   right: 48px;
 }
 

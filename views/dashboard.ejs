@@ -71,49 +71,48 @@
         </div>
         <div class="app-grid pinned-grid" id="pinnedAppGrid">
           <% pinnedApps.forEach(app => { %>
-            <div class="app-card-wrapper" data-app-id="<%= app.Id %>" data-pinned="true">
-              <a href="/launch/<%= app.Id %>"
-                 class="app-card"
-                 data-campus="<%= app.Campus || 'global' %>"
-                 data-app-code="<%= app.ApplicationCode %>"
-                 data-app-id="<%= app.Id %>"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 title="<%= app.Application %><%= app.Campus ? ' — ' + app.Campus : '' %>">
-                <!-- Favorite Toggle Button -->
-                <button type="button" 
-                        class="app-favorite-btn active" 
-                        data-app-id="<%= app.Id %>" 
-                        title="Remove from favorites" 
-                        aria-label="Remove from favorites">
-                  <i class="bi bi-star-fill"></i>
-                </button>
-                <div class="app-card-icon" data-app="<%= app.ApplicationCode %>">
-                  <i class="bi bi-<%= app.Icon || 'app-indicator' %>"></i>
-                </div>
-                <div class="app-card-body">
-                  <h3 class="app-card-title"><%= app.Application %></h3>
-                  <% if (app.Description) { %>
-                    <p class="app-card-desc"><%= app.Description %></p>
+            <a href="/launch/<%= app.Id %>"
+               class="app-card"
+               data-campus="<%= app.Campus || 'global' %>"
+               data-app-code="<%= app.ApplicationCode %>"
+               data-app-id="<%= app.Id %>"
+               data-pinned="true"
+               target="_blank"
+               rel="noopener noreferrer"
+               title="<%= app.Application %><%= app.Campus ? ' — ' + app.Campus : '' %>">
+              <!-- Favorite Toggle Button -->
+              <button type="button" 
+                      class="app-favorite-btn active" 
+                      data-app-id="<%= app.Id %>" 
+                      title="Remove from favorites" 
+                      aria-label="Remove from favorites">
+                <i class="bi bi-star-fill"></i>
+              </button>
+              <div class="app-card-icon" data-app="<%= app.ApplicationCode %>">
+                <i class="bi bi-<%= app.Icon || 'app-indicator' %>"></i>
+              </div>
+              <div class="app-card-body">
+                <h3 class="app-card-title"><%= app.Application %></h3>
+                <% if (app.Description) { %>
+                  <p class="app-card-desc"><%= app.Description %></p>
+                <% } %>
+                <div class="app-card-meta">
+                  <% if (app.Campus) { %>
+                    <span class="app-card-campus">
+                      <i class="bi bi-building me-1"></i><%= app.Campus %>
+                    </span>
                   <% } %>
-                  <div class="app-card-meta">
-                    <% if (app.Campus) { %>
-                      <span class="app-card-campus">
-                        <i class="bi bi-building me-1"></i><%= app.Campus %>
-                      </span>
-                    <% } %>
-                    <% if (app.Name) { %>
-                      <span class="app-card-type">
-                        <i class="bi bi-person me-1"></i><%= app.Name %>
-                      </span>
-                    <% } %>
-                  </div>
+                  <% if (app.Name) { %>
+                    <span class="app-card-type">
+                      <i class="bi bi-person me-1"></i><%= app.Name %>
+                    </span>
+                  <% } %>
                 </div>
-                <div class="app-card-arrow">
-                  <i class="bi bi-arrow-right"></i>
-                </div>
-              </a>
-            </div>
+              </div>
+              <div class="app-card-arrow">
+                <i class="bi bi-arrow-right"></i>
+              </div>
+            </a>
           <% }) %>
         </div>
       </div>
@@ -185,59 +184,57 @@
       <div class="app-grid" id="app-grid">
         <% applications.forEach(app => { %>
           <% const isFav = favSet.has(app.Id); %>
-          <div class="app-card-wrapper" data-app-id="<%= app.Id %>">
-            <a href="/launch/<%= app.Id %>"
-               class="app-card"
-               data-campus="<%= app.Campus || 'global' %>"
-               data-app-code="<%= app.ApplicationCode %>"
-               data-app-id="<%= app.Id %>"
-               target="_blank"
-               rel="noopener noreferrer"
-               title="<%= app.Application %><%= app.Campus ? ' — ' + app.Campus : '' %>">
-              
-              <!-- Health status badge -->
-              <span class="health-badge health-unknown"
-                    data-health-id="<%= app.Id %>"
-                    title="Checking status...">
-                <span class="health-dot"></span>
-                <span class="health-label">—</span>
-              </span>
+          <a href="/launch/<%= app.Id %>"
+             class="app-card"
+             data-campus="<%= app.Campus || 'global' %>"
+             data-app-code="<%= app.ApplicationCode %>"
+             data-app-id="<%= app.Id %>"
+             target="_blank"
+             rel="noopener noreferrer"
+             title="<%= app.Application %><%= app.Campus ? ' — ' + app.Campus : '' %>">
+            
+            <!-- Health status badge -->
+            <span class="health-badge health-unknown"
+                  data-health-id="<%= app.Id %>"
+                  title="Checking status...">
+              <span class="health-dot"></span>
+              <span class="health-label">—</span>
+            </span>
 
-              <!-- Favorite Toggle Button -->
-              <button type="button" 
-                      class="app-favorite-btn <%= isFav ? 'active' : '' %>" 
-                      data-app-id="<%= app.Id %>" 
-                      title="<%= isFav ? 'Remove from favorites' : 'Pin to favorites' %>" 
-                      aria-label="<%= isFav ? 'Remove from favorites' : 'Pin to favorites' %>">
-                <i class="bi <%= isFav ? 'bi-star-fill' : 'bi-star' %>"></i>
-              </button>
+            <!-- Favorite Toggle Button -->
+            <button type="button" 
+                    class="app-favorite-btn <%= isFav ? 'active' : '' %>" 
+                    data-app-id="<%= app.Id %>" 
+                    title="<%= isFav ? 'Remove from favorites' : 'Pin to favorites' %>" 
+                    aria-label="<%= isFav ? 'Remove from favorites' : 'Pin to favorites' %>">
+              <i class="bi <%= isFav ? 'bi-star-fill' : 'bi-star' %>"></i>
+            </button>
 
-              <div class="app-card-icon" data-app="<%= app.ApplicationCode %>">
-                <i class="bi bi-<%= app.Icon || 'app-indicator' %>"></i>
-              </div>
-              <div class="app-card-body">
-                <h3 class="app-card-title"><%= app.Application %></h3>
-                <% if (app.Description) { %>
-                  <p class="app-card-desc"><%= app.Description %></p>
+            <div class="app-card-icon" data-app="<%= app.ApplicationCode %>">
+              <i class="bi bi-<%= app.Icon || 'app-indicator' %>"></i>
+            </div>
+            <div class="app-card-body">
+              <h3 class="app-card-title"><%= app.Application %></h3>
+              <% if (app.Description) { %>
+                <p class="app-card-desc"><%= app.Description %></p>
+              <% } %>
+              <div class="app-card-meta">
+                <% if (app.Campus) { %>
+                  <span class="app-card-campus">
+                    <i class="bi bi-building me-1"></i><%= app.Campus %>
+                  </span>
                 <% } %>
-                <div class="app-card-meta">
-                  <% if (app.Campus) { %>
-                    <span class="app-card-campus">
-                      <i class="bi bi-building me-1"></i><%= app.Campus %>
-                    </span>
-                  <% } %>
-                  <% if (app.Name) { %>
-                    <span class="app-card-type">
-                      <i class="bi bi-person me-1"></i><%= app.Name %>
-                    </span>
-                  <% } %>
-                </div>
+                <% if (app.Name) { %>
+                  <span class="app-card-type">
+                    <i class="bi bi-person me-1"></i><%= app.Name %>
+                  </span>
+                <% } %>
               </div>
-              <div class="app-card-arrow">
-                <i class="bi bi-arrow-right"></i>
-              </div>
-            </a>
-          </div>
+            </div>
+            <div class="app-card-arrow">
+              <i class="bi bi-arrow-right"></i>
+            </div>
+          </a>
         <% }) %>
       </div>
     <% } else { %>

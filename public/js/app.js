@@ -20,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Campus filter tabs ----
   const filterTabs = document.querySelectorAll('.filter-tab');
-  const appCards = document.querySelectorAll('.app-card[data-campus]');
   const visibleCount = document.getElementById('visible-count');
 
   function updateVisibleCount() {
     if (!visibleCount) return;
+    const appCards = document.querySelectorAll('#app-grid .app-card[data-campus]');
     let count = 0;
     appCards.forEach(card => {
       if (card.style.display !== 'none') count++;
@@ -39,9 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
       tab.classList.add('active');
 
       const campus = tab.dataset.campus;
+      const appCards = document.querySelectorAll('#app-grid .app-card[data-campus]');
 
-      // Filter cards with animation
-      appCards.forEach((card, index) => {
+      let visibleIndex = 0;
+      appCards.forEach(card => {
         const cardCampus = card.dataset.campus;
         const match = campus === 'all' || cardCampus === campus;
 
@@ -49,11 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
           card.style.display = '';
           card.style.opacity = '0';
           card.style.transform = 'translateY(12px)';
+          const delay = visibleIndex * 25;
+          visibleIndex++;
           setTimeout(() => {
-            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
-          }, index * 30);
+          }, delay);
         } else {
           card.style.display = 'none';
         }
@@ -907,15 +910,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pinnedGrid && pinnedSection) {
       if (newActiveState) {
         // Clone from the main grid into the pinned grid if not already there
-        const existingInPinned = pinnedGrid.querySelector(`.app-card-wrapper[data-app-id="${appId}"]`);
+        const existingInPinned = pinnedGrid.querySelector(`.app-card[data-app-id="${appId}"]`);
         if (!existingInPinned) {
-          const mainCardWrapper = document.querySelector(`#app-grid .app-card-wrapper[data-app-id="${appId}"]`);
-          if (mainCardWrapper) {
-            const clone = mainCardWrapper.cloneNode(true);
+          const mainCard = document.querySelector(`#app-grid .app-card[data-app-id="${appId}"]`);
+          if (mainCard) {
+            const clone = mainCard.cloneNode(true);
             clone.setAttribute('data-pinned', 'true');
+            // Ensure pinned card is visible regardless of current filter tab
+            clone.style.display = '';
+            clone.style.opacity = '1';
+            clone.style.transform = 'none';
             const clonedBtn = clone.querySelector('.app-favorite-btn');
             if (clonedBtn) {
               clonedBtn.classList.add('active');
+              clonedBtn.setAttribute('title', 'Remove from favorites');
+              clonedBtn.setAttribute('aria-label', 'Remove from favorites');
               const icon = clonedBtn.querySelector('i');
               if (icon) icon.className = 'bi bi-star-fill';
             }
@@ -924,14 +933,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         // Remove from pinned grid
-        const pinnedWrapper = pinnedGrid.querySelector(`.app-card-wrapper[data-app-id="${appId}"]`);
-        if (pinnedWrapper) {
-          pinnedWrapper.remove();
+        const pinnedCard = pinnedGrid.querySelector(`.app-card[data-app-id="${appId}"]`);
+        if (pinnedCard) {
+          pinnedCard.remove();
         }
       }
 
       // Update pinned count & section visibility
-      const currentPinnedCount = pinnedGrid.querySelectorAll('.app-card-wrapper').length;
+      const currentPinnedCount = pinnedGrid.querySelectorAll('.app-card').length;
       if (pinnedBadge) pinnedBadge.textContent = currentPinnedCount;
       if (currentPinnedCount > 0) {
         pinnedSection.style.display = '';
