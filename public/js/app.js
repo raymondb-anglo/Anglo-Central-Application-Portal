@@ -18,13 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateClock, 1000);
   }
 
-  // ---- Campus filter tabs ----
+  // ---- Campus filter tabs & initial fade-in (Dashboard) ----
+  const appCards = document.querySelectorAll('#app-grid .app-card[data-campus]');
   const filterTabs = document.querySelectorAll('.filter-tab');
   const visibleCount = document.getElementById('visible-count');
 
   function updateVisibleCount() {
     if (!visibleCount) return;
-    const appCards = document.querySelectorAll('#app-grid .app-card[data-campus]');
     let count = 0;
     appCards.forEach(card => {
       if (card.style.display !== 'none') count++;
@@ -32,57 +32,58 @@ document.addEventListener('DOMContentLoaded', () => {
     visibleCount.textContent = count;
   }
 
-  filterTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      // Update active tab
-      filterTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+  if (filterTabs.length > 0) {
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
 
-      const campus = tab.dataset.campus;
-      const appCards = document.querySelectorAll('#app-grid .app-card[data-campus]');
+        const campus = tab.dataset.campus;
+        let visibleIndex = 0;
+        appCards.forEach(card => {
+          const cardCampus = card.dataset.campus;
+          const match = campus === 'all' || cardCampus === campus;
 
-      let visibleIndex = 0;
-      appCards.forEach(card => {
-        const cardCampus = card.dataset.campus;
-        const match = campus === 'all' || cardCampus === campus;
+          if (match) {
+            card.style.display = '';
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(12px)';
+            const delay = visibleIndex * 25;
+            visibleIndex++;
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, delay);
+          } else {
+            card.style.display = 'none';
+          }
+        });
 
-        if (match) {
-          card.style.display = '';
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(12px)';
-          const delay = visibleIndex * 25;
-          visibleIndex++;
-          setTimeout(() => {
-            card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-          }, delay);
-        } else {
-          card.style.display = 'none';
+        updateVisibleCount();
+      });
+    });
+  }
+
+  // ---- Fade-in animation for app cards on initial load ----
+  if (appCards.length > 0) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+          observer.unobserve(entry.target);
         }
       });
+    }, { threshold: 0.1 });
 
-      updateVisibleCount();
+    appCards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(16px)';
+      card.style.transition = `opacity 0.4s ease ${index * 0.04}s, transform 0.4s ease ${index * 0.04}s`;
+      observer.observe(card);
     });
-  });
-
-  // ---- Fade-in animation for app cards on load ----
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-
-  appCards.forEach((card, index) => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(16px)';
-    card.style.transition = `opacity 0.4s ease ${index * 0.04}s, transform 0.4s ease ${index * 0.04}s`;
-    observer.observe(card);
-  });
+  }
 
   // ---- Auto-dismiss alerts after 8 seconds ----
   document.querySelectorAll('.alert').forEach(alert => {
